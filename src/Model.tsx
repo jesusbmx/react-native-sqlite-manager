@@ -1,29 +1,19 @@
 import DB, { type ResultSet } from './DB';
 import { QueryBuilder, type QueryOptions } from './QueryBuilder';
 
-export type Repository = {
-  databaseName: string;
-  tableName: string;
-  primaryKey?: string
-}
-
 // Representa un modelos de base de datos
 export default class Model {
 
-  static get repository(): Repository {
-    throw new Error('database not defined')
+  static get datebasaName(): string {
+    throw new Error('datebasaName not defined')
   }
 
-  static get tableName() {
-    return this.repository.tableName;
+  static get tableName(): string {
+    throw new Error('tableName not defined')
   }
 
-  static get datebasaName() {
-    return this.repository.databaseName;
-  }
-
-  static get primaryKey() {
-    return this.repository.primaryKey ?? "id";
+  static get primaryKey(): string {
+    return "id";
   }
 
   constructor(props: any = {}) {

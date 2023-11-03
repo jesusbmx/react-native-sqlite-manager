@@ -1,6 +1,6 @@
 {
   "name": "react-native-sqlite-manager",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "tool that simplifies management and access to SQLite databases in React Native applications",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",

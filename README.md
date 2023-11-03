@@ -88,11 +88,24 @@ import { Model, Repository } from 'react-native-sqlite-manager';
 
 export default class Animal extends Model {
 
-  static get repository(): Repository {
-    return {
-      databaseName: 'myApp.db', 
-      tableName: 'tb_animal',
-    }
+ static get datebasaName(): string {
+    return 'myApp.db'
+  }
+
+  static get tableName(): string {
+    return 'tb_animal'
+  }
+
+  // Custom function
+  static async getAnimals(): Promise<any[]> {
+    // RAW Query
+    const { rows } = await Animal.executeSql(`
+      SELECT id, name, color FROM tb_animals 
+      WHERE age > ? AND age < ?
+    `, [
+      8, 12
+    ])
+    return row
   }
   
 }
@@ -127,17 +140,6 @@ const animalsByQuery = await Animal.query({
   limit: 30,
   order: 'name ASC'
 })
-
-// RAW Query
-const { rows } = await Animal.executeSql(`
-  SELECT id, name, color FROM tb_animals 
-  WHERE age > ? AND age < ?
-  ORDER BY name ASC 
-  LIMIT 30 OFFSET 60
-`, [
-  8, 12
-])
-
 ```
 
 ## Insert, Update, Delete
