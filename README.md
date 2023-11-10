@@ -4,7 +4,7 @@ Tool that simplifies management and access to SQLite databases in React Native a
 
 #### Dependencies
 ```sh
-react-native-sqlite-storage
+npm install react-native-sqlite-storage
 ```
 
 ## Installation
@@ -14,11 +14,32 @@ npm install react-native-sqlite-manager
 ```
 
 ## Getting Started
-Initialize the database in your React Native application as follows:
+
+You just have to import the library like this:
 
 ```js
 import { DB } from 'react-native-sqlite-manager';
+```
 
+Open the database using
+
+```js
+const db = await DB.open("myApp.db");
+```
+
+Now, whenever you need to make some database call you can use db variable to execute the database query.
+
+```js
+const { rows } = await db.executeSql(`
+  SELECT id, name, color FROM tb_animals
+`)
+```
+
+## Create database
+
+Initialize the database in your React Native application as follows:
+
+```js
 function App(): JSX.Element {
 
   const [loading, setLoading] = useState(true); 
@@ -26,8 +47,10 @@ function App(): JSX.Element {
   useEffect(() => {
     setLoading(true)
 
-    const db = DB.get(/*name*/ "myApp.db")
-    db.init(new Scheme(), /*version*/ 1).then(() => {
+    // We get a database instance by name. 
+    const db = DB.get(/*database name*/"myApp.db")
+    // Initialize the database schema.
+    db.init(new Scheme(), /*database version*/ 1).then(() => {
       setLoading(false)
     })
 
@@ -51,7 +74,7 @@ function App(): JSX.Element {
 }
 ```
 
-## Defining the Schema
+### Defining the Schema
 Define your database schema by creating a class that extends ItScheme:
 
 ```js
@@ -80,6 +103,56 @@ export default class Scheme extends ItScheme {
 }
 ```
 
+## Query Builder
+
+Only available from version `0.2.7`
+
+### Select
+```js
+// SELECT id, name, color FROM tb_animals 
+// WHERE age > 8 AND age < 12
+// ORDER BY name ASC 
+// LIMIT 30 OFFSET 60
+const rows = db.table('tb_animals')
+  .select('id, name, color')
+  .where("age > ? AND age < ?", [8, 12])
+  .orderBy('name ASC')
+  .limit(30)
+  .page(3)
+  .get()
+```
+
+### Insert
+```js
+// INSERT INTO tb_animals(name, color, age, timestamp) 
+// VALUES("Bob", "Brown", 2, 1699018870505)
+const insertId = db.table('tb_animals')
+  .insert({
+    name: 'Bob',
+    color: 'Brown',
+    age: 2,
+    timestamp: Date.now(),
+  })
+```
+
+### Update
+```js
+// UPDATE tb_animals SET name = "Bob" WHERE id = 7
+const rowsAffected = db.table('tb_animals')
+  .where("id = ?", [7])
+  .update({
+    name: 'Bob',
+  })
+```
+
+### Delete
+```js
+// DELETE FROM tb_animals WHERE id = 8
+const rowsAffected = db.table('tb_animals')
+  .where("id = ?", [7])
+  .delete()
+```
+
 ## Model Definition
 Create a model for your database table by extending the Model class:
 
@@ -88,7 +161,7 @@ import { Model, Repository } from 'react-native-sqlite-manager';
 
 export default class Animal extends Model {
 
- static get datebasaName(): string {
+  static get datebasaName(): string {
     return 'myApp.db'
   }
 
@@ -100,19 +173,18 @@ export default class Animal extends Model {
   static async getAnimals(): Promise<any[]> {
     // RAW Query
     const { rows } = await Animal.executeSql(`
-      SELECT id, name, color FROM tb_animals 
-      WHERE age > ? AND age < ?
+      SELECT * FROM tb_animals WHERE age > ? AND age < ?
     `, [
       8, 12
     ])
-    return row
+
+    return rows
   }
-  
 }
 
 ```
 
-## Select
+### Select
 ```js
 // SELECT * FROM tb_animals
 const animals = await Animal.all()
@@ -140,9 +212,10 @@ const animalsByQuery = await Animal.query({
   limit: 30,
   order: 'name ASC'
 })
+
 ```
 
-## Insert, Update, Delete
+### Insert
 ```js
 // INSERT INTO tb_animals(name, color, age, timestamp) 
 // VALUES("Bob", "Brown", 2, 1699018870505)
@@ -152,43 +225,35 @@ const createdAnimal = await Animal.create({
   age: 2,
   timestamp: Date.now(),
 })
+```
 
+### Update
+```js
 // UPDATE tb_animals SET name = "Bob" WHERE id = 7
 const updatedAnimal = await Animal.update({
   id: 7,
   name: 'Bob',
 })
+```
 
+### Delete
+```js
 // DELETE FROM tb_animals WHERE id = 8
 await Animal.destroy(8)
+```
 
+### Save
+```js
 const animalById = await Animal.find(1)
 animalById.age = 12
 await animalById.save()
 ```
 
-## Database Select
+## Raw Query
+
+### Select
+
 ```js
-const db = DB.get('myApp.db')
-
-await db.open()
-
-// SELECT id, name, color FROM tb_animals 
-// WHERE age > 8 AND age < 12
-// ORDER BY name ASC 
-// LIMIT 30 OFFSET 60
-const animalsByQuery = await db.select('tb_animals', {
-  columns: 'id, name, color',
-  where: {
-    clause: 'age > ? AND age < ?',
-    args: [ 8, 12 ],
-  },
-  page: 3,
-  limit: 30,
-  order: 'name ASC'
-})
-
-// RAW Query
 const { rows } = await db.executeSql(`
   SELECT id, name, color FROM tb_animals 
   WHERE age > ? AND age < ?
@@ -199,31 +264,28 @@ const { rows } = await db.executeSql(`
 ])
 ```
 
-## Database Insert, Update, Delete
+### Insert
+
 ```js
+const { insertId } = await db.executeSql(`
+  INSERT INTO tb_animals(name, color, age, timestamp) 
+  VALUES("Bob", "Brown", 2, 1699018870505)
+`)
+```
 
-// INSERT INTO tb_animals(name, color, age, timestamp) 
-// VALUES("Bob", "Brown", 2, 1699018870505)
-const insertId = await db.insert('tb_animals', {
-  name: 'Bob',
-  color: 'Brown',
-  age: 2,
-  timestamp: Date.now(),
-})
+### Update
 
-// UPDATE tb_animals SET name = "Bob" WHERE id = 7
-const rowsAffected = await db.update('tb_animals', {
-  name: 'Bob',
-}, {
-  clause: 'id = ?',
-  args: [7]
-})
+```js
+const { rowsAffected } = await db.executeSql(`
+  UPDATE tb_animals SET name = "Bob" WHERE id = 7
+`)
+```
 
-// DELETE FROM tb_animals WHERE id = 8
-const rowsAffected = await db.delete('tb_animals', {
-  clause: 'id = ?',
-  args: [8]
-})
+### Delete
+```js
+const { rowsAffected } = await db.executeSql(`
+  DELETE FROM tb_animals WHERE id = 8
+`)
 ```
 
 ## Update database version

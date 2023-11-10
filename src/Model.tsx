@@ -1,5 +1,5 @@
 import DB, { type ResultSet } from './DB';
-import { QueryBuilder, type QueryOptions } from './QueryBuilder';
+import QueryBuilder, { type QueryOptions } from './QueryBuilder';
 
 // Representa un modelos de base de datos
 export default class Model {

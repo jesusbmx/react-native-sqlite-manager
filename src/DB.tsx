@@ -1,5 +1,5 @@
 import type { ItScheme } from "./ItScheme"
-import QueryBuilder, { type QueryOptions, type Where } from "./QueryBuilder"
+import QueryBuilder from "./QueryBuilder"
 
 const { openDatabase } = require('react-native-sqlite-storage')
 
@@ -29,20 +29,36 @@ export default class DB {
   public sqlite?: SQLiteDatabase | null
 
   /**
-   * Abre la base de datos
-   * 
    * @param {string} name nombre de la db
    */
   constructor(name: string) {
     this.name = name;
   }
 
+  /**
+   * Abre la base de datos
+   * 
+   * @param {string} name nombre de la db
+   * @returns {DB} database
+   */
   public static get(name: string): DB {
     var db = this._instances.get(name);
     if (!db) {
       db = new DB(name);
       this._instances.set(name, db);
     }
+    return db;
+  }
+
+  /**
+   * Abre la base de datos
+   * 
+   * @param {string} name nombre de la db
+   * @returns {DB} database
+   */
+  public static async open(name: string): Promise<DB> {
+    const db = DB.get(name);
+    await db.open();
     return db;
   }
 
@@ -179,87 +195,14 @@ export default class DB {
     scheme.onLoad(this)
   }
 
- /** 
-  * SELECT
-  * 
-  * @param {string} table name
-  * @param {QueryOptions} options
-  * @returns array de registros
-  */
-  select(table: string, options: QueryOptions = {}): Promise<any[]> {
-    const sql = QueryBuilder.query(table, options);
-    return this.executeSql(sql, options.where?.args)
-      .then((result: ResultSet) => result.rows)
-  }
-
-  /** 
-   * INSERT
+  /**
+   * Obtiene un QueryBuilder
    * 
-   * @param {string} table name
-   * @param {any} values
-   * @returns insertId
+   * @param tableName nombre de la tabla 
+   * @returns 
    */
-  insert(table: string, values: any): Promise<number> {
-    var sql = QueryBuilder.create(table, values)
-    const params = Object.values(values)
-    
-    return this.executeSql(sql, params)
-      .then(result => result.insertId ?? -1)
-  }
-
-  /** 
-   * INSERT
-   * 
-   * @param {string} table name
-   * @param {any[]} array
-   * @returns result
-   */
-  insertArray(table: string, array: any[]): Promise<ResultSet> {
-    const sql = QueryBuilder.createArray(table, array)
-    const params: any[] = []
-
-    array.forEach(obj => {
-      const values: any[] = Object.values(obj)
-      values.forEach(val => {
-        params.push(val)
-      })
-    })
-
-    return this.executeSql(sql, params)
-  }
-
-  /** 
-   * UPDATE
-   * 
-   * @param {string} table name
-   * @param {any} values
-   * @param {Where} where
-   * @returns rowsAffected
-   */
-  update(table: string, values: any, where: Where): Promise<number> {
-    const sql = QueryBuilder.update(
-      table, values, where.clause)
-
-    const params = Object.values(values)
-    const whereArgs = where.args ?? []
-
-    return this.executeSql(sql, [...params, ...whereArgs])
-      .then(result => result.rowsAffected)
-  }
-
-  /** 
-   * DELETE
-   * 
-   * @param {string} table name
-   * @param {Where} where
-   * @returns rowsAffected
-   */
-  delete(table: string, where: Where): Promise<number> {
-    const sql = QueryBuilder.destroy(
-      table, where.clause)
-
-    return this.executeSql(sql, where.args)
-      .then(result => result.rowsAffected)
+  table(tableName: string): QueryBuilder {
+    return new QueryBuilder(this, tableName)
   }
 }
 

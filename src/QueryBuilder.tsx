@@ -1,3 +1,6 @@
+import type { ResultSet } from "./DB"
+import type DB from "./DB"
+
 // Opciones para el QUERY
 export type QueryOptions = {
   columns?: string
@@ -14,10 +17,24 @@ export type Where = {
 }
 
 // Crea los querys
-export module QueryBuilder {
+class QueryBuilder {
+
+  public db: DB;
+  public tableName: string;
+  private _columns: string = '*';
+  private _whereClause: string = '';
+  private _whereArgs: any[] = [];
+  private _orderBy: string = '';
+  private _limit: number | undefined = undefined;
+  private _page: number | undefined = undefined;
+
+  constructor(db: DB, tableName: string) {
+    this.db = db;
+    this.tableName = tableName;
+  }
 
   // SELECT
-  export function query(
+  static query(
     tableName: string, 
     options: QueryOptions
   ): string {
@@ -53,7 +70,7 @@ export module QueryBuilder {
   }
 
   // Creates the "INSERT" sql statement
-  export function create(tableName: string, object: any): string {
+  static create(tableName: string, object: any): string {
     const keys = Object.keys(object)
     const columns = keys.join(', ')
     const values = keys.map(() => '?').join(', ')
@@ -62,7 +79,7 @@ export module QueryBuilder {
   }
 
   // Creates the "INSERT" sql statement
-  export function createArray(tableName: string, array: any[]): string {
+  static createArray(tableName: string, array: any[]): string {
     if (array.length === 0) {
       throw new Error('array is empty')
     }
@@ -80,7 +97,7 @@ export module QueryBuilder {
   }
 
   // Creates the "Update" sql statement
-  export function update(tableName: string, object: any, whereClause: string): string {
+  static update(tableName: string, object: any, whereClause: string): string {
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     //const { id, ...props } = object
     const values = Object.keys(object)
@@ -91,12 +108,12 @@ export module QueryBuilder {
   }
 
   // Creates the "DELETE" sql statement
-  export function destroy(tableName: string, whereClause: string): string {
+  static destroy(tableName: string, whereClause: string): string {
     return `DELETE FROM ${tableName} WHERE ${whereClause};`
   }
   
   // Creates the "DELETE ALL" sql statement
-  export function destroyAll(tableName: string): string {
+  static destroyAll(tableName: string): string {
     return `DELETE FROM ${tableName};`
   }
   
@@ -106,7 +123,7 @@ export module QueryBuilder {
    * @param {any[]} array [1,3,4,2]
    * @returns (?, ?, ?, ?)
    */
-  export function whereClausePlaceholders(array: any[]): string {
+  static whereClausePlaceholders(array: any[]): string {
     var args: string[] = [];
     for (let i = 0; i < array.length; i++) {
       args.push("?");
@@ -118,7 +135,7 @@ export module QueryBuilder {
    * @param sqlString "valor con 'comillas'"
    * @returns "'valor con \'comillas\''"
    */
-  export function escapeSqlString(sqlString: string, escape = '\''): string {
+  static escapeSqlString(sqlString: string, escape = '\''): string {
     var sb: any[] = []
     sb.push(escape);
 
@@ -137,6 +154,117 @@ export module QueryBuilder {
 
     sb.push(escape);
     return sb.join("")
+  }
+
+  select(columns: string): this {
+    this._columns = columns;
+    return this;
+  }
+
+  where(clause: string, args: any[]): this {
+    this._whereClause = clause;
+    this._whereArgs = args;
+    return this;
+  }
+
+  orderBy(orderBy: string): this {
+    this._orderBy = orderBy;
+    return this;
+  }
+
+  limit(limit: number): this {
+    this._limit = limit;
+    return this;
+  }
+
+  page(page: number): this {
+    this._page = page;
+    return this;
+  }
+
+  /** 
+   * SELECT
+   * 
+   * @returns array de registros
+   */ 
+  get(): Promise<any[]> {
+    const sql = QueryBuilder.query(this.tableName, {
+      columns: this._columns,
+      where: {
+        clause: this._whereClause,
+        args: this._whereArgs,
+      },
+      order: this._orderBy,
+      limit: this._limit,
+      page: this._page,
+    });
+
+    return this.db.executeSql(sql, this._whereArgs)
+      .then((result: ResultSet) => result.rows)
+  }
+
+  /** 
+   * INSERT
+   * 
+   * @param {any} values
+   * @returns insertId
+   */
+  insert(values: any): Promise<number> {
+    var sql = QueryBuilder.create(this.tableName, values)
+    const params = Object.values(values)
+    
+    return this.db.executeSql(sql, params)
+      .then(result => result.insertId ?? -1)
+  }
+
+  /** 
+   * INSERT
+   * 
+   * @param {any[]} array
+   * @returns result
+   */
+  insertArray(array: any[]): Promise<ResultSet> {
+    const sql = QueryBuilder.createArray(this.tableName, array)
+    const params: any[] = []
+
+    array.forEach(obj => {
+      const values: any[] = Object.values(obj)
+      values.forEach(val => {
+        params.push(val)
+      })
+    })
+
+    return this.db.executeSql(sql, params)
+  }
+
+  /** 
+   * UPDATE
+   * 
+   * @param {any} values
+   * @returns rowsAffected
+   */
+  update(values: any): Promise<number> {
+    const sql = QueryBuilder.update(
+      this.tableName, values, this._whereClause)
+
+    const params = Object.values(values)
+    const whereArgs = this._whereArgs ?? []
+
+    return this.db.executeSql(sql, [...params, ...whereArgs])
+      .then(result => result.rowsAffected)
+  }
+
+  /** 
+   * DELETE
+   * 
+   * @returns rowsAffected
+   */
+  delete(): Promise<number> {
+    const sql = QueryBuilder.destroy(
+      this.tableName, this._whereClause)
+
+    return this.db.executeSql(sql, this._whereArgs)
+      .then(result => result.rowsAffected)
   }
 }
 

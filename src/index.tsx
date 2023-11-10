@@ -1,11 +1,12 @@
 import DB, { type ResultSet } from './DB';
 import { ItScheme } from './ItScheme';
 import QueryBuilder, { type QueryOptions, type Where } from './QueryBuilder';
-import Table, { Column } from './Table';
+import TableInfo from './TableInfo';
+import Column from './Column';
 import Model from './Model';
 
-export function table(db: DB, tableName: string): Table {
-  return new Table(db, tableName)
+export function table(db: DB, tableName: string): TableInfo {
+  return new TableInfo(db, tableName)
 }
 
 export type {
@@ -13,5 +14,5 @@ export type {
 }
 
 export {
-  DB, ItScheme, QueryBuilder, Model, Table, Column
+  DB, ItScheme, QueryBuilder, Model, TableInfo, Column
 }
