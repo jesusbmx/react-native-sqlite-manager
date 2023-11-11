@@ -159,7 +159,7 @@ export default class Model {
    * @returns array de registros
    */
   static query(options: QueryOptions = {}): Promise<any[]> {
-    const sql = QueryBuilder.query(this.tableName, options);
+    const sql = QueryBuilder.buildSelect(this.tableName, options);
     return this.executeSql(sql, options.where?.args)
       .then((result: ResultSet) => result.rows)
   }
@@ -175,7 +175,7 @@ export default class Model {
    * @returns registro creado
    */
   static create(obj: any): Promise<any | undefined> {
-    var sql = QueryBuilder.create(this.tableName, obj)
+    var sql = QueryBuilder.buildInsert(this.tableName, obj)
     const params = Object.values(obj)
     
     return this.executeSql(sql, params)
@@ -197,7 +197,7 @@ export default class Model {
    // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
    const { [this.primaryKey]: id, ...props } = obj
 
-   const sql = QueryBuilder.update(
+   const sql = QueryBuilder.buildUpdate(
      this.tableName, props, `${this.primaryKey} = ?`)
 
    const params = Object.values(props)
@@ -214,7 +214,7 @@ export default class Model {
    * @returns rowsAffected
    */
   static destroy(id: any): Promise<number> {
-    const sql = QueryBuilder.destroy(
+    const sql = QueryBuilder.buildDelete(
       this.tableName, `${this.primaryKey} = ?`)
 
     return this.executeSql(sql, [id])
@@ -228,7 +228,7 @@ export default class Model {
    * @returns rowsAffected
    */
   static destroyAll(): Promise<number> {
-    const sql = QueryBuilder.destroyAll(this.tableName)
+    const sql = QueryBuilder.buildDelete(this.tableName)
     return this.executeSql(sql)
       .then(res => res.rowsAffected)
   }

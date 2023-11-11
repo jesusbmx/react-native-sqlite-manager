@@ -1,4 +1,4 @@
-import type { ItScheme } from "./ItScheme"
+import type ItScheme from "./ItScheme"
 import QueryBuilder from "./QueryBuilder"
 
 const { openDatabase } = require('react-native-sqlite-storage')
@@ -175,7 +175,7 @@ export default class DB {
    * Inicializa el scheme de la base de datos.
    */
   async init(scheme: ItScheme, version: number) {
-    console.debug("DB.init");
+    //console.debug("DB.init");
     await this.open()
 
     // Obtiene la version actual de la db

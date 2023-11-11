@@ -3,7 +3,7 @@ import type DB from "./DB";
 /**
  * Esquema para la base de datos
  */
-export abstract class ItScheme {
+export default abstract class ItScheme {
 
   abstract onCreate(db: DB): void;
 

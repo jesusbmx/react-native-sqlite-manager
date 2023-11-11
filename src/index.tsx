@@ -1,5 +1,5 @@
 import DB, { type ResultSet } from './DB';
-import { ItScheme } from './ItScheme';
+import ItScheme from './ItScheme';
 import QueryBuilder, { type QueryOptions, type Where } from './QueryBuilder';
 import TableInfo from './TableInfo';
 import Column from './Column';

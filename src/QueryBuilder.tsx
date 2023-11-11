@@ -1,5 +1,4 @@
-import type { ResultSet } from "./DB"
-import type DB from "./DB"
+import DB, { type ResultSet } from "./DB"
 
 // Opciones para el QUERY
 export type QueryOptions = {
@@ -12,7 +11,7 @@ export type QueryOptions = {
 
 // Clause Where
 export type Where = {
-  clause: string,
+  clause?: string,
   args?: any[],
 }
 
@@ -22,9 +21,9 @@ class QueryBuilder {
   public db: DB;
   public tableName: string;
   private _columns: string = '*';
-  private _whereClause: string = '';
-  private _whereArgs: any[] = [];
-  private _orderBy: string = '';
+  private _whereClause: string | undefined = undefined;
+  private _whereArgs: any[] | undefined = undefined;
+  private _orderBy: string | undefined = undefined;
   private _limit: number | undefined = undefined;
   private _page: number | undefined = undefined;
 
@@ -34,10 +33,12 @@ class QueryBuilder {
   }
 
   // SELECT
-  static query(
+  static buildSelect(
     tableName: string, 
     options: QueryOptions
   ): string {
+
+    const { where } = options
 
     let sqlParts: any[] = [
       'SELECT',
@@ -46,9 +47,9 @@ class QueryBuilder {
       tableName,
     ]
 
-    if (options.where) {
+    if (where && where.clause) {
       sqlParts.push("WHERE")
-      sqlParts.push(options.where.clause)
+      sqlParts.push(where.clause)
     }
     
     if (options.order) {
@@ -70,7 +71,7 @@ class QueryBuilder {
   }
 
   // Creates the "INSERT" sql statement
-  static create(tableName: string, object: any): string {
+  static buildInsert(tableName: string, object: any): string {
     const keys = Object.keys(object)
     const columns = keys.join(', ')
     const values = keys.map(() => '?').join(', ')
@@ -79,42 +80,41 @@ class QueryBuilder {
   }
 
   // Creates the "INSERT" sql statement
-  static createArray(tableName: string, array: any[]): string {
-    if (array.length === 0) {
-      throw new Error('array is empty')
+  static buildInsertArray(tableName: string, keys: string[], data: any[][]): string {
+    if (keys.length === 0) {
+      throw new Error('fields is empty')
+    }
+    if (data.length === 0) {
+      throw new Error('data is empty')
     }
   
-    const keys = Object.keys(array[0]);
     const columns = keys.join(', ');
+    const values = keys.map(() => '?').join(', ')
+    const valuesArray = data.map(() => `(${values})`).join(', ');
   
-    //const values = objects.map(() => `(${keys.map(() => '?').join(', ')})`).join(', ');
-    const values = array.map(() => {
-      const placeholders = keys.map(() => '?').join(', ');
-      return `(${placeholders})`;
-    }).join(', ');
-  
-    return `INSERT INTO ${tableName} (${columns}) VALUES ${values};`;
+    return `INSERT INTO ${tableName} (${columns}) VALUES ${valuesArray};`;
   }
 
   // Creates the "Update" sql statement
-  static update(tableName: string, object: any, whereClause: string): string {
+  static buildUpdate(tableName: string, object: any, whereClause?: string): string {
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     //const { id, ...props } = object
     const values = Object.keys(object)
       .map(k => `${k} = ?`)
       .join(', ')
 
-    return `UPDATE ${tableName} SET ${values} WHERE ${whereClause};`
+    const wherePart = whereClause && whereClause.trim().length > 0 
+      ? ` WHERE ${whereClause}` : '';
+
+    return `UPDATE ${tableName} SET ${values}${wherePart};`;
   }
 
   // Creates the "DELETE" sql statement
-  static destroy(tableName: string, whereClause: string): string {
-    return `DELETE FROM ${tableName} WHERE ${whereClause};`
-  }
-  
-  // Creates the "DELETE ALL" sql statement
-  static destroyAll(tableName: string): string {
-    return `DELETE FROM ${tableName};`
+  static buildDelete(tableName: string, whereClause?: string): string {
+    const wherePart = whereClause && whereClause.trim().length > 0 
+      ? ` WHERE ${whereClause}` : '';
+
+    return `DELETE FROM ${tableName}${wherePart};`
   }
   
   /**
@@ -188,7 +188,7 @@ class QueryBuilder {
    * @returns array de registros
    */ 
   get(): Promise<any[]> {
-    const sql = QueryBuilder.query(this.tableName, {
+    const sql = QueryBuilder.buildSelect(this.tableName, {
       columns: this._columns,
       where: {
         clause: this._whereClause,
@@ -210,7 +210,7 @@ class QueryBuilder {
    * @returns insertId
    */
   insert(values: any): Promise<number> {
-    var sql = QueryBuilder.create(this.tableName, values)
+    var sql = QueryBuilder.buildInsert(this.tableName, values)
     const params = Object.values(values)
     
     return this.db.executeSql(sql, params)
@@ -220,20 +220,19 @@ class QueryBuilder {
   /** 
    * INSERT
    * 
-   * @param {any[]} array
+   * @param {string[]} fields ["Column 1", "Column 2"]
+   * @param {any[][]} data [
+   *  ["foo", "bar"],
+   *  ["abc", "def"]
+   * ]
    * @returns result
    */
-  insertArray(array: any[]): Promise<ResultSet> {
-    const sql = QueryBuilder.createArray(this.tableName, array)
-    const params: any[] = []
-
-    array.forEach(obj => {
-      const values: any[] = Object.values(obj)
-      values.forEach(val => {
-        params.push(val)
-      })
-    })
-
+  insertArray(fields: string[], data: any[][]): Promise<ResultSet> {
+    const sql = QueryBuilder.buildInsertArray(
+      this.tableName, fields, data)
+    // crea una nueva matriz con todos los elementos de las submatrices 
+    // concatenados recursivamente hasta la profundidad especificada
+    const params: any[] = data.flat()
     return this.db.executeSql(sql, params)
   }
 
@@ -244,7 +243,7 @@ class QueryBuilder {
    * @returns rowsAffected
    */
   update(values: any): Promise<number> {
-    const sql = QueryBuilder.update(
+    const sql = QueryBuilder.buildUpdate(
       this.tableName, values, this._whereClause)
 
     const params = Object.values(values)
@@ -260,7 +259,7 @@ class QueryBuilder {
    * @returns rowsAffected
    */
   delete(): Promise<number> {
-    const sql = QueryBuilder.destroy(
+    const sql = QueryBuilder.buildDelete(
       this.tableName, this._whereClause)
 
     return this.db.executeSql(sql, this._whereArgs)
