@@ -24,7 +24,7 @@ import { DB } from 'react-native-sqlite-manager';
 Open the database using
 
 ```js
-const db = await DB.open("myApp.db");
+const db = await DB.open("example.db");
 ```
 
 Now, whenever you need to make some database call you can use db variable to execute the database query.
@@ -48,7 +48,7 @@ function App(): JSX.Element {
     setLoading(true)
 
     // We get a database instance by name. 
-    const db = DB.get(/*database name*/"myApp.db")
+    const db = DB.get(/*database name*/"example.db")
     // Initialize the database schema.
     db.init(new Scheme(), /*database version*/ 1).then(() => {
       setLoading(false)
@@ -78,7 +78,7 @@ function App(): JSX.Element {
 Define your database schema by creating a class that extends ItScheme:
 
 ```js
-import { ItScheme, table } from 'react-native-sqlite-manager';
+import { DB, ItScheme } from 'react-native-sqlite-manager';
 
 export default class Scheme extends ItScheme {
     
@@ -87,8 +87,6 @@ export default class Scheme extends ItScheme {
    * @param db
    */
   async onCreate(db: DB) {
-    console.debug("Scheme.onCreate")
-
     await db.executeSql(`
       CREATE TABLE IF NOT EXISTS tb_animals (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
@@ -105,7 +103,7 @@ export default class Scheme extends ItScheme {
 
 ## Query Builder
 
-Only available from version `0.3.0`
+Only available from version `0.3.3`
 
 ### Select
 ```js
@@ -157,16 +155,16 @@ const rowsAffected = await db.table('tb_animals')
 Create a model for your database table by extending the Model class:
 
 ```js
-import { Model, Repository } from 'react-native-sqlite-manager';
+import { Model } from 'react-native-sqlite-manager';
 
 export default class Animal extends Model {
 
   static get datebasaName(): string {
-    return 'myApp.db'
+    return 'example.db'
   }
 
   static get tableName(): string {
-    return 'tb_animal'
+    return 'tb_animals'
   }
 
   // Custom function
@@ -302,7 +300,7 @@ In the code above, we use `DB.get("myApp.db")` to access the database instance, 
 
 In the updated schema class, you can define changes to the database structure for the new version. For example, you can add new columns to existing tables. Here's an example of an updated schema class:
 ```js
-import { ItScheme, table } from 'react-native-sqlite-manager';
+import { DB, ItScheme, table } from 'react-native-sqlite-manager';
 
 export default class Scheme extends ItScheme {
     
@@ -311,8 +309,6 @@ export default class Scheme extends ItScheme {
    * @param db
    */
   async onCreate(db: DB) {
-    console.debug("Scheme.onCreate")
-
     await db.executeSql(`
       CREATE TABLE IF NOT EXISTS tb_animals (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
@@ -332,8 +328,6 @@ export default class Scheme extends ItScheme {
    * @param {number} newVersion
    */
   async onUpdate(db: DB, oldVersion: number, newVersion: number) {
-    console.debug("Scheme.onUpdate", oldVersion, newVersion)
-
     if (oldVersion != newVersion) {
       // update version db
 

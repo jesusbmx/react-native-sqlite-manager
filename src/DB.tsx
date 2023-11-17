@@ -1,9 +1,9 @@
 import type ItScheme from "./ItScheme"
 import QueryBuilder from "./QueryBuilder"
 
-const { openDatabase } = require('react-native-sqlite-storage')
+//npm install --save-dev @types/react-native-sqlite-storage
+const { openDatabase } = require('react-native-sqlite-storage');
 
-//SQLite.DEBUG(config.app.isDebug)
 
 export type SQLiteDatabase = {
   close(): () => void
@@ -184,15 +184,15 @@ export default class DB {
     // Valida la version actual con la version del archivo
     if (dbVersion == 0) {
       await scheme.onCreate(this);
+      await scheme.onPostCreate(this);
 
     } else if (dbVersion != version) {
       await scheme.onUpdate(this, dbVersion, version);
+      await scheme.onPostUpdate(this, dbVersion, version);
     }
 
     // Setea la nueva version en la base de datos
     this.setVersion(version);
-
-    scheme.onLoad(this)
   }
 
   /**
