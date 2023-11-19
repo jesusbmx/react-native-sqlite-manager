@@ -9,15 +9,12 @@ import AnimalListItem from "../components/AnimalListItem";
 function AnimalListScreen({navigation, route}: any): JSX.Element {
     const [items, setItems] = useState<any[]>([])
   
-    // Gancho que se ejecuta cuando cambie de estado "searchQuery"
     useEffect(() => {
       updateList();
     }, [])
   
-    // Actualiza la lista
     const updateList = () => {
       Animal.all().then(rows => {
-        console.debug(rows)
         setItems(rows)
       }).catch(error => {
         console.error(error)
@@ -27,11 +24,14 @@ function AnimalListScreen({navigation, route}: any): JSX.Element {
     // Cuando se modifica un registro
     useOnEvent('Animal.onUpdate', updateList)
   
-    // Muestra los detalles del registro
     const handleOnPressItem = (item: any) => {
       navigation.navigate("AnimalDetailsScreen", {
         id: item.id,
       })
+    }
+
+    const handleAdd = () => {
+      navigation.navigate("AnimalFormScreen")
     }
 
     // render
@@ -41,6 +41,7 @@ function AnimalListScreen({navigation, route}: any): JSX.Element {
         <Appbar.Header>
           <Appbar.BackAction onPress={() => navigation.goBack()} />
           <Appbar.Content title={"Animals"} />
+          <Appbar.Action icon='plus' onPress={handleAdd} />
         </Appbar.Header>
 
         { /* Lista de registros */ }

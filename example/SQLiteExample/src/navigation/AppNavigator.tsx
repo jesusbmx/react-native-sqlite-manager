@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import AnimalListScreen from '../screen/AnimalListScreen';
+import AnimalDetailsScreen from '../screen/AnimalDetailsScreen';
+import AnimalFormScreen from '../screen/AnimalFormScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +24,14 @@ function AppNavigator(): JSX.Element {
         <Stack.Screen
           name="AnimalListScreen"
           component={AnimalListScreen}
+        />
+        <Stack.Screen
+          name='AnimalDetailsScreen'
+          component={AnimalDetailsScreen}
+        />
+        <Stack.Screen
+          name='AnimalFormScreen'
+          component={AnimalFormScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
