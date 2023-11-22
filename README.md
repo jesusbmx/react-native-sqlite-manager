@@ -2,6 +2,8 @@
 
 Tool that simplifies management and access to SQLite databases in React Native applications
 
+[Example](example/SQLiteExample)
+
 #### Dependencies
 ```sh
 npm install react-native-sqlite-storage
@@ -105,7 +107,7 @@ export default class Scheme extends ItScheme {
 
 Only available from version `0.3.3`
 
-### Select
+#### Select
 ```js
 // SELECT id, name, color FROM tb_animals 
 // WHERE age > 8 AND age < 12
@@ -120,7 +122,7 @@ const rows = await db.table('tb_animals')
   .get()
 ```
 
-### Insert
+#### Insert
 ```js
 // INSERT INTO tb_animals(name, color, age, timestamp) 
 // VALUES("Bob", "Brown", 2, 1699018870505)
@@ -133,7 +135,7 @@ const insertId = await db.table('tb_animals')
   })
 ```
 
-### Update
+#### Update
 ```js
 // UPDATE tb_animals SET name = "Bob" WHERE id = 7
 const rowsAffected = await db.table('tb_animals')
@@ -143,7 +145,7 @@ const rowsAffected = await db.table('tb_animals')
   })
 ```
 
-### Delete
+#### Delete
 ```js
 // DELETE FROM tb_animals WHERE id = 8
 const rowsAffected = await db.table('tb_animals')
@@ -166,23 +168,11 @@ export default class Animal extends Model {
   static get tableName(): string {
     return 'tb_animals'
   }
-
-  // Custom function
-  static async getAnimals(): Promise<any[]> {
-    // RAW Query
-    const { rows } = await Animal.executeSql(`
-      SELECT * FROM tb_animals WHERE age > ? AND age < ?
-    `, [
-      8, 12
-    ])
-
-    return rows
-  }
 }
 
 ```
 
-### Select
+#### Select
 ```js
 // SELECT * FROM tb_animals
 const animals = await Animal.all()
@@ -213,7 +203,7 @@ const animalsByQuery = await Animal.query({
 
 ```
 
-### Insert
+#### Insert
 ```js
 // INSERT INTO tb_animals(name, color, age, timestamp) 
 // VALUES("Bob", "Brown", 2, 1699018870505)
@@ -225,7 +215,7 @@ const createdAnimal = await Animal.create({
 })
 ```
 
-### Update
+#### Update
 ```js
 // UPDATE tb_animals SET name = "Bob" WHERE id = 7
 const updatedAnimal = await Animal.update({
@@ -234,22 +224,42 @@ const updatedAnimal = await Animal.update({
 })
 ```
 
-### Delete
+#### Delete
 ```js
 // DELETE FROM tb_animals WHERE id = 8
 await Animal.destroy(8)
 ```
 
-### Save
+#### Save
 ```js
 const animalById = await Animal.find(1)
 animalById.age = 12
 await animalById.save()
 ```
 
+#### Custom function
+
+```js
+export default class Animal extends Model {
+
+  ...
+
+  static async getAnimals(): Promise<any[]> {
+    const { rows } = await Animal.executeSql(`
+      SELECT * FROM tb_animals WHERE age > ? AND age < ?
+    `, [
+      8, 12
+    ])
+
+    return rows
+  }
+}
+
+```
+
 ## Raw Query
 
-### Select
+#### Select
 
 ```js
 const { rows } = await db.executeSql(`
@@ -262,7 +272,7 @@ const { rows } = await db.executeSql(`
 ])
 ```
 
-### Insert
+#### Insert
 
 ```js
 const { insertId } = await db.executeSql(`
@@ -271,7 +281,7 @@ const { insertId } = await db.executeSql(`
 `)
 ```
 
-### Update
+#### Update
 
 ```js
 const { rowsAffected } = await db.executeSql(`
@@ -279,7 +289,7 @@ const { rowsAffected } = await db.executeSql(`
 `)
 ```
 
-### Delete
+#### Delete
 ```js
 const { rowsAffected } = await db.executeSql(`
   DELETE FROM tb_animals WHERE id = 8
@@ -296,7 +306,7 @@ db.init(new Scheme(), /*version*/ 2).then(() => {
 ```
 In the code above, we use `DB.get("myApp.db")` to access the database instance, `new Scheme()` to create an updated database schema, and 2 to set the new database version.
 
-## Updated Schema
+### Updated Schema
 
 In the updated schema class, you can define changes to the database structure for the new version. For example, you can add new columns to existing tables. Here's an example of an updated schema class:
 ```js
