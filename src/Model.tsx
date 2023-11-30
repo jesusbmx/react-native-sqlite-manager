@@ -17,23 +17,26 @@ export default class Model {
   }
 
   constructor(props: any = {}) {
-    this.setProperties(props)
+    // Copiar las propiedades al objeto actual (this)
+    Object.assign(this, props);
   }
 
-  getProperties(): any {
-    return this
-  }
+  //constructor(public id: number, public name: string) {}
 
-  setProperties(props: any) {
-    // const cm = this.constructor
-    // const campos = Object.getOwnPropertyNames(this);
-    // console.debug("__constructor__", cm, campos)
+  /**
+   * Instanciamos la clase hija correspondiente
+   * @param props 
+   * @returns new model
+   */
+  static toModel<T extends Model>(props: any): T {
+    // return new (this as any)(item.id, item.name) as T;
+    // const model = new (this as any)(props) as T
+    const model = new (this as any)() as T
 
-    const instance: any = this
-    for (var key in props) {
-      const value: any = props[key];
-      instance[key] = value;
-    }
+    // Copiar las propiedades al objeto actual (this)
+    Object.assign(model, props);
+
+    return model
   }
 
   /**
@@ -53,37 +56,23 @@ export default class Model {
 
   /**
    * ```js
-   * Animal.all()
-   * ```
-   * @return array con todos los registros
-   */
-  static all(): Promise<any[]> {
-    const sql = `
-      SELECT * FROM ${this.tableName}
-    `
-    return this.executeSql(sql)
-      .then((result: ResultSet) => result.rows)
-  }
-
-  /**
-   * ```js
-   * Animal.findBy("color", "LIKE", '%Brown%')
+   * Animal.findBy<Animal>("color", "LIKE", '%Brown%')
    * ```
    * @param column mombre de la columna
    * @param op operador: =, <>, <, <=, >, >=, LIKE
    * @param value qriterio de busqueda
    * @return registro
    */
-  static findBy(
+  static findBy<T extends Model>(
     column: string, op: string, value: string
-  ): Promise<any | undefined> {
+  ): Promise<T | undefined> {
     
     const sql = `
       SELECT * FROM ${this.tableName} WHERE ${column} ${op} ?
     `
     return this.executeSql(sql, [value])
       .then((result: ResultSet) => result.rows[0])
-      .then(row => (row ? new this(row) : row))
+      .then(row => (row ? this.toModel<T>(row) : row))
   }
 
   /**
@@ -93,8 +82,10 @@ export default class Model {
    * @param id identificador del registro
    * @return registro
    */
-  static find(id: any): Promise<any | undefined> {
-    return this.findBy(this.primaryKey, "=", id)
+  static find<T extends Model>(
+    id: any
+  ): Promise<T | undefined> {
+    return this.findBy<T>(this.primaryKey, "=", id)
   }
   
   /**
@@ -103,13 +94,13 @@ export default class Model {
    * ```
    * @return primer registro
    */
-  static first(): Promise<any | null> {
+  static first<T extends Model>(): Promise<T | null> {
     const sql = `
       SELECT * FROM ${this.tableName} ORDER BY ROWID ASC LIMIT 1
     `
     return this.executeSql(sql)
       .then((result: ResultSet) => result.rows[0])
-      .then(row => (row ? new this(row) : row))
+      .then(row => (row ? this.toModel<T>(row) : row))
   }
 
   /**
@@ -118,13 +109,13 @@ export default class Model {
    * ```
    * @return último registro
    */
-  static last(): Promise<any | null> {
+  static last<T extends Model>(): Promise<T | null> {
     const sql = `
       SELECT * FROM ${this.tableName} ORDER BY ROWID DESC LIMIT 1
     `
     return this.executeSql(sql)
       .then((result: ResultSet) => result.rows[0])
-      .then(row => (row ? new this(row) : row))
+      .then(row => (row ? this.toModel<T>(row) : row))
   }
     
   /**
@@ -141,6 +132,21 @@ export default class Model {
       .then((result: ResultSet) => result.rows[0])
       .then((row: any) => row["__count__"])
   }
+
+  /**
+   * ```js
+   * Animal.all()
+   * ```
+   * @return array con todos los registros
+   */
+  static all(): Promise<any[]> {
+    const sql = `
+      SELECT * FROM ${this.tableName}
+    `
+    return this.executeSql(sql)
+      .then((result: ResultSet) => result.rows)
+  }
+  
 
   /**
    * ```js
@@ -174,12 +180,14 @@ export default class Model {
    * @param obj
    * @returns registro creado
    */
-  static create(obj: any): Promise<any | undefined> {
+  static create<T extends Model>(
+    obj: any
+  ): Promise<T | undefined> {
     var sql = QueryBuilder.buildInsert(this.tableName, obj)
     const params = Object.values(obj)
     
     return this.executeSql(sql, params)
-      .then(result => this.find(result.insertId))
+      .then(result => this.find<T>(result.insertId))
   }
 
   /**
@@ -193,17 +201,19 @@ export default class Model {
    * @param obj
    * @returns registro actualizado
    */
-  static update(obj: any): Promise<any | undefined> {
-   // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
-   const { [this.primaryKey]: id, ...props } = obj
+  static update<T extends Model>(
+    obj: any
+  ): Promise<T | undefined> {
+    // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
+    const { [this.primaryKey]: id, ...props } = obj
 
-   const sql = QueryBuilder.buildUpdate(
-     this.tableName, props, `${this.primaryKey} = ?`)
+    const sql = QueryBuilder.buildUpdate(
+      this.tableName, props, `${this.primaryKey} = ?`)
 
-   const params = Object.values(props)
+    const params = Object.values(props)
 
-   return this.executeSql(sql, [...params, id])
-     .then(_ => this.find(id))
+    return this.executeSql(sql, [...params, id])
+     .then(_ => this.find<T>(id))
   }
 
   /**
@@ -244,15 +254,15 @@ export default class Model {
    * @param obj
    * @returns registro guardo o actualizado
    */
-  save(): Promise<any | undefined> {
+  save<T extends Model>(): Promise<T | undefined> {
     const model = (this.constructor as typeof Model);
     const obj: any = this;
     const id = obj[model.primaryKey]
 
     if (id) {
-      return model.update(obj)
+      return model.update<T>(obj)
     } else {
-      return model.create(obj)
+      return model.create<T>(obj)
     }
   }
 
