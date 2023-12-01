@@ -1,4 +1,3 @@
-import { createTableColumns, type ColumnType } from "./ColumnType"
 import DB, { type ResultSet } from "./DB"
 
 // Opciones para el QUERY
@@ -208,20 +207,6 @@ class QueryBuilder {
     return `DELETE FROM ${tableName}${wherePart};`
   }
 
-  // Creates the "DROP TABLE" sql statement
-  static buildDropTable(tableName: string): string {
-    return `DROP TABLE IF EXISTS ${tableName};`
-  }
-
-  // Creates the "CREATE TABLE" sql statement
-  static buildCreateTable(
-    tableName: string, 
-    columnMapping: { [s: string]: ColumnType }
-  ): string {
-    const columns = createTableColumns(columnMapping)
-    return `CREATE TABLE IF NOT EXISTS ${tableName} (${columns});`
-  }
-  
   /**
    * Compila una clausula where
    * 

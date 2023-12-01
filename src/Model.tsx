@@ -1,6 +1,4 @@
-import type { ColumnType } from './ColumnType';
 import DB, { type ResultSet } from './DB';
-import Field from './Field';
 import QueryBuilder, { type QueryOptions } from './QueryBuilder';
 
 // Representa un modelos de base de datos
@@ -18,20 +16,9 @@ export default class Model {
     return "id";
   }
 
-  static get columnMapping(): { [s: string]: ColumnType } {
-    return {
-      id: {
-        type: 'INTEGER',
-        primary_key: true,
-        not_null: true,
-      }
-    }
-  }
-
   constructor(props: any = {}) {
     // Copiar las propiedades al objeto actual (this)
-    //Object.assign(this, props);
-    Field.setProperties(this, props)
+    Object.assign(this, props);
   }
 
   //constructor(public id: number, public name: string) {}
@@ -178,10 +165,8 @@ export default class Model {
    * @returns registro creado
    */
   static create<T extends Model>(
-    _obj: any
+    obj: any
   ): Promise<T | undefined> {
-    const obj = Field.toDatabaseValue(this.columnMapping, _obj)
-
     var sql = QueryBuilder.buildInsert(this.tableName, obj)
     const params = Object.values(obj)
     
@@ -201,10 +186,8 @@ export default class Model {
    * @returns registro actualizado
    */
   static update<T extends Model>(
-    _obj: any
+    obj: any
   ): Promise<T | undefined> {
-    const obj = Field.toDatabaseValue(this.columnMapping, _obj)
-
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     const { [this.primaryKey]: id, ...props } = obj
 
@@ -242,16 +225,6 @@ export default class Model {
     const sql = QueryBuilder.buildDelete(this.tableName)
     return this.executeSql(sql)
       .then(res => res.rowsAffected)
-  }
-
-  static createTable(): Promise<boolean> {
-    const sql = QueryBuilder.buildCreateTable(this.tableName, this.columnMapping)
-    return this.executeSql(sql).then(() => true)
-  }
-
-  static dropTable(): Promise<boolean> {
-    const sql = QueryBuilder.buildDropTable(this.tableName)
-    return this.executeSql(sql).then(() => true)
   }
 
   /**
