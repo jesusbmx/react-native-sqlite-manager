@@ -8,7 +8,7 @@ export default class Scheme extends ItScheme {
    * @param db
    */
   async onCreate(db: DB) {
-    await db.executeSql(`
+    /*await db.executeSql(`
       CREATE TABLE IF NOT EXISTS tb_animals (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
         name TEXT NOT NULL, 
@@ -16,7 +16,8 @@ export default class Scheme extends ItScheme {
         age INTEGER NOT NULL, 
         timestamp INTEGER NOT NULL
       );
-    `)
+    `)*/
+    await Animal.createTable();
   }
 
   /**

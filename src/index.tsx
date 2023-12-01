@@ -1,18 +1,26 @@
-import DB, { type ResultSet } from './DB';
-import ItScheme from './ItScheme';
-import QueryBuilder, { type QueryOptions, type Where } from './QueryBuilder';
-import TableInfo from './TableInfo';
-import Column from './Column';
-import Model from './Model';
-
-export function table(db: DB, tableName: string): TableInfo {
-  return new TableInfo(db, tableName)
-}
+import ColumnInfo from "./ColumnInfo";
+import { type ColumnType } from "./ColumnType";
+import DB, { type ResultSet } from "./DB";
+import Field, { type Type } from "./Field";
+import ItScheme from "./ItScheme";
+import Model from "./Model";
+import QueryBuilder, { type QueryOptions, type Where} from "./QueryBuilder";
+import TableInfo from "./TableInfo";
 
 export type {
-  ResultSet, QueryOptions, Where
+  ColumnType,
+  Type,
+  QueryOptions,
+  Where,
+  ResultSet
 }
 
 export {
-  DB, ItScheme, QueryBuilder, Model, TableInfo, Column
+  ColumnInfo,
+  DB,
+  Field,
+  ItScheme,
+  Model,
+  QueryBuilder,
+  TableInfo
 }

@@ -1,5 +1,5 @@
-import type Column from "./Column";
 import DB from "./DB";
+import type ColumnInfo from "./ColumnInfo";
 
 /**
  * Gestiona las propiedades de un tabla de Sqlite
@@ -36,10 +36,10 @@ export default class TableInfo {
    * @param columns 
    * @returns 
    */
-  async addColumns(columns: Column[]): Promise<Column[]> {
+  async addColumns(columns: ColumnInfo[]): Promise<ColumnInfo[]> {
     const currentColumns = await this.info()
     
-    return await columns.filter(async (columnOptions: Column) => {
+    return await columns.filter(async (columnOptions: ColumnInfo) => {
       for (let i = 0; i < currentColumns.length; i++) {
         const currentColumn = currentColumns[i];
         if (columnOptions.name == currentColumn.name) {
@@ -56,4 +56,3 @@ export default class TableInfo {
     });
   }
 }
-  

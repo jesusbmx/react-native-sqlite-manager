@@ -1,3 +1,4 @@
+import { createTableColumns, type ColumnType } from "./ColumnType"
 import DB, { type ResultSet } from "./DB"
 
 // Opciones para el QUERY
@@ -33,128 +34,22 @@ class QueryBuilder {
   }
 
   // SELECT
-  static buildSelect(
-    tableName: string, 
-    options: QueryOptions
-  ): string {
-
-    const { where } = options
-
-    let sqlParts: any[] = [
+  static buildSelect(tableName: string, options: QueryOptions): string {
+    const { columns = "*", where, order, limit, page } = options;
+  
+    const sqlParts = [
       'SELECT',
-      options.columns ?? "*",
+      columns,
       'FROM',
       tableName,
-    ]
-
-    if (where && where.clause) {
-      sqlParts.push("WHERE")
-      sqlParts.push(where.clause)
-    }
-    
-    if (options.order) {
-      sqlParts.push("ORDER BY")
-      sqlParts.push(options.order)
-    }
-
-    if (options.limit) {
-      sqlParts.push("LIMIT")
-      sqlParts.push(options.limit)
-
-      if (options.page) {
-        sqlParts.push("OFFSET")
-        sqlParts.push(options.limit * (options.page - 1))
-      }
-    }
-
-    return sqlParts.filter(p => p !== '').join(' ')
-  }
-
-  // Creates the "INSERT" sql statement
-  static buildInsert(tableName: string, object: any): string {
-    const keys = Object.keys(object)
-    const columns = keys.join(', ')
-    const values = keys.map(() => '?').join(', ')
-
-    return `INSERT INTO ${tableName} (${columns}) VALUES (${values});`
-  }
-
-  // Creates the "INSERT" sql statement
-  static buildInsertArray(tableName: string, keys: string[], data: any[][]): string {
-    if (keys.length === 0) {
-      throw new Error('fields is empty')
-    }
-    if (data.length === 0) {
-      throw new Error('data is empty')
-    }
+      where && where.clause ? `WHERE ${where.clause}` : '',
+      order ? `ORDER BY ${order}` : '',
+      limit ? `LIMIT ${limit}` : '',
+      page && limit ? `OFFSET ${limit * (page - 1)}` : '',
+    ];
   
-    const columns = keys.join(', ');
-    const values = keys.map(() => '?').join(', ')
-    const valuesArray = data.map(() => `(${values})`).join(', ');
-  
-    return `INSERT INTO ${tableName} (${columns}) VALUES ${valuesArray};`;
-  }
-
-  // Creates the "Update" sql statement
-  static buildUpdate(tableName: string, object: any, whereClause?: string): string {
-    // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
-    //const { id, ...props } = object
-    const values = Object.keys(object)
-      .map(k => `${k} = ?`)
-      .join(', ')
-
-    const wherePart = whereClause && whereClause.trim().length > 0 
-      ? ` WHERE ${whereClause}` : '';
-
-    return `UPDATE ${tableName} SET ${values}${wherePart};`;
-  }
-
-  // Creates the "DELETE" sql statement
-  static buildDelete(tableName: string, whereClause?: string): string {
-    const wherePart = whereClause && whereClause.trim().length > 0 
-      ? ` WHERE ${whereClause}` : '';
-
-    return `DELETE FROM ${tableName}${wherePart};`
-  }
-  
-  /**
-   * Compila una clausula where
-   * 
-   * @param {any[]} array [1,3,4,2]
-   * @returns (?, ?, ?, ?)
-   */
-  static whereClausePlaceholders(array: any[]): string {
-    var args: string[] = [];
-    for (let i = 0; i < array.length; i++) {
-      args.push("?");
-    }
-    return "(" + args.join(", ") + ")";
-  }
-  
-  /**
-   * @param sqlString "valor con 'comillas'"
-   * @returns "'valor con \'comillas\''"
-   */
-  static escapeSqlString(sqlString: string, escape = '\''): string {
-    var sb: any[] = []
-    sb.push(escape);
-
-    if (sqlString.indexOf(escape) != -1) {
-      var length: number = sqlString.length;
-      for (var i = 0; i < length; i++) {
-          var c: string = sqlString.charAt(i);
-          if (c == escape) {
-            sb.push(escape);
-          }
-          sb.push(c);
-      }
-    } else {
-      sb.push(sqlString);
-    }
-
-    sb.push(escape);
-    return sb.join("")
-  }
+    return sqlParts.filter(Boolean).join(' ');
+  }  
 
   select(columns: string): this {
     this._columns = columns;
@@ -265,6 +160,86 @@ class QueryBuilder {
     return this.db.executeSql(sql, this._whereArgs)
       .then(result => result.rowsAffected)
   }
+
+  // Creates the "INSERT" sql statement
+  static buildInsert(tableName: string, object: any): string {
+    const keys = Object.keys(object)
+    const columns = keys.join(', ')
+    const values = keys.map(() => '?').join(', ')
+
+    return `INSERT INTO ${tableName} (${columns}) VALUES (${values});`
+  }
+
+  // Creates the "INSERT" sql statement
+  static buildInsertArray(tableName: string, keys: string[], data: any[][]): string {
+    if (keys.length === 0) {
+      throw new Error('fields is empty')
+    }
+    if (data.length === 0) {
+      throw new Error('data is empty')
+    }
+  
+    const columns = keys.join(', ');
+    const values = keys.map(() => '?').join(', ')
+    const valuesArray = data.map(() => `(${values})`).join(', ');
+  
+    return `INSERT INTO ${tableName} (${columns}) VALUES ${valuesArray};`;
+  }
+
+  // Creates the "Update" sql statement
+  static buildUpdate(tableName: string, object: any, whereClause?: string): string {
+    // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
+    //const { id, ...props } = object
+    const values = Object.keys(object)
+      .map(k => `${k} = ?`)
+      .join(', ')
+
+    const wherePart = whereClause && whereClause.trim().length > 0 
+      ? ` WHERE ${whereClause}` : '';
+
+    return `UPDATE ${tableName} SET ${values}${wherePart};`;
+  }
+
+  // Creates the "DELETE" sql statement
+  static buildDelete(tableName: string, whereClause?: string): string {
+    const wherePart = whereClause && whereClause.trim().length > 0 
+      ? ` WHERE ${whereClause}` : '';
+
+    return `DELETE FROM ${tableName}${wherePart};`
+  }
+
+  // Creates the "DROP TABLE" sql statement
+  static buildDropTable(tableName: string): string {
+    return `DROP TABLE IF EXISTS ${tableName};`
+  }
+
+  // Creates the "CREATE TABLE" sql statement
+  static buildCreateTable(
+    tableName: string, 
+    columnMapping: { [s: string]: ColumnType }
+  ): string {
+    const columns = createTableColumns(columnMapping)
+    return `CREATE TABLE IF NOT EXISTS ${tableName} (${columns});`
+  }
+  
+  /**
+   * Compila una clausula where
+   * 
+   * @param {any[]} array [1,3,4,2]
+   * @returns (?, ?, ?, ?)
+   */
+  static whereClausePlaceholders(array: any[]): string {
+    return `(${Array(array.length).fill('?').join(', ')})`;
+  }
+  
+  /**
+   * @param sqlString "valor con 'comillas'"
+   * @returns "'valor con \'comillas\''"
+   */
+  static escapeSqlString(sqlString: string, escape = '\''): string {
+    const escapedString = sqlString.replace(new RegExp(escape, 'g'), escape + escape);
+    return escape + escapedString + escape;
+  }  
 }
 
 export default QueryBuilder

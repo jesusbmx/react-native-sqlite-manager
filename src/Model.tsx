@@ -1,4 +1,6 @@
+import type { ColumnType } from './ColumnType';
 import DB, { type ResultSet } from './DB';
+import Field from './Field';
 import QueryBuilder, { type QueryOptions } from './QueryBuilder';
 
 // Representa un modelos de base de datos
@@ -16,28 +18,23 @@ export default class Model {
     return "id";
   }
 
+  static get columnMapping(): { [s: string]: ColumnType } {
+    return {
+      id: {
+        type: 'INTEGER',
+        primary_key: true,
+        not_null: true,
+      }
+    }
+  }
+
   constructor(props: any = {}) {
     // Copiar las propiedades al objeto actual (this)
-    Object.assign(this, props);
+    //Object.assign(this, props);
+    Field.setProperties(this, props)
   }
 
   //constructor(public id: number, public name: string) {}
-
-  /**
-   * Instanciamos la clase hija correspondiente
-   * @param props 
-   * @returns new model
-   */
-  static toModel<T extends Model>(props: any): T {
-    // return new (this as any)(item.id, item.name) as T;
-    // const model = new (this as any)(props) as T
-    const model = new (this as any)() as T
-
-    // Copiar las propiedades al objeto actual (this)
-    Object.assign(model, props);
-
-    return model
-  }
 
   /**
    * ```js
@@ -71,8 +68,8 @@ export default class Model {
       SELECT * FROM ${this.tableName} WHERE ${column} ${op} ?
     `
     return this.executeSql(sql, [value])
-      .then((result: ResultSet) => result.rows[0])
-      .then(row => (row ? this.toModel<T>(row) : row))
+      .then(result => result.rows[0])
+      .then(row => row ? (new (this as any)(row) as T) : row)
   }
 
   /**
@@ -99,8 +96,8 @@ export default class Model {
       SELECT * FROM ${this.tableName} ORDER BY ROWID ASC LIMIT 1
     `
     return this.executeSql(sql)
-      .then((result: ResultSet) => result.rows[0])
-      .then(row => (row ? this.toModel<T>(row) : row))
+      .then(result => result.rows[0])
+      .then(row => row ? (new (this as any)(row) as T) : row)
   }
 
   /**
@@ -114,8 +111,8 @@ export default class Model {
       SELECT * FROM ${this.tableName} ORDER BY ROWID DESC LIMIT 1
     `
     return this.executeSql(sql)
-      .then((result: ResultSet) => result.rows[0])
-      .then(row => (row ? this.toModel<T>(row) : row))
+      .then(result => result.rows[0])
+      .then(row => row ? (new (this as any)(row) as T) : row)
   }
     
   /**
@@ -129,7 +126,7 @@ export default class Model {
       SELECT COUNT(*) AS __count__ FROM ${this.tableName}
     `
     return this.executeSql(sql)
-      .then((result: ResultSet) => result.rows[0])
+      .then(result => result.rows[0])
       .then((row: any) => row["__count__"])
   }
 
@@ -144,7 +141,7 @@ export default class Model {
       SELECT * FROM ${this.tableName}
     `
     return this.executeSql(sql)
-      .then((result: ResultSet) => result.rows)
+      .then(result => result.rows)
   }
   
 
@@ -167,7 +164,7 @@ export default class Model {
   static query(options: QueryOptions = {}): Promise<any[]> {
     const sql = QueryBuilder.buildSelect(this.tableName, options);
     return this.executeSql(sql, options.where?.args)
-      .then((result: ResultSet) => result.rows)
+      .then(result => result.rows)
   }
 
   /**
@@ -181,8 +178,10 @@ export default class Model {
    * @returns registro creado
    */
   static create<T extends Model>(
-    obj: any
+    _obj: any
   ): Promise<T | undefined> {
+    const obj = Field.toDatabaseValue(this.columnMapping, _obj)
+
     var sql = QueryBuilder.buildInsert(this.tableName, obj)
     const params = Object.values(obj)
     
@@ -202,8 +201,10 @@ export default class Model {
    * @returns registro actualizado
    */
   static update<T extends Model>(
-    obj: any
+    _obj: any
   ): Promise<T | undefined> {
+    const obj = Field.toDatabaseValue(this.columnMapping, _obj)
+
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     const { [this.primaryKey]: id, ...props } = obj
 
@@ -243,6 +244,16 @@ export default class Model {
       .then(res => res.rowsAffected)
   }
 
+  static createTable(): Promise<boolean> {
+    const sql = QueryBuilder.buildCreateTable(this.tableName, this.columnMapping)
+    return this.executeSql(sql).then(() => true)
+  }
+
+  static dropTable(): Promise<boolean> {
+    const sql = QueryBuilder.buildDropTable(this.tableName)
+    return this.executeSql(sql).then(() => true)
+  }
+
   /**
    * ```js
    * Animal.save({
@@ -256,6 +267,7 @@ export default class Model {
    */
   save<T extends Model>(): Promise<T | undefined> {
     const model = (this.constructor as typeof Model);
+    
     const obj: any = this;
     const id = obj[model.primaryKey]
 
@@ -268,6 +280,7 @@ export default class Model {
 
   destroy(): Promise<number> {
     const model = (this.constructor as typeof Model);
+
     const obj: any = this;
     const id = obj[model.primaryKey]
     return model.destroy(id);
