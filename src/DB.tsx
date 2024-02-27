@@ -1,4 +1,4 @@
-import type ItScheme from "./ItScheme"
+import type ItMigration from "./ItMigration"
 import QueryBuilder from "./QueryBuilder"
 
 //npm install --save-dev @types/react-native-sqlite-storage
@@ -174,7 +174,7 @@ export default class DB {
   /**
    * Inicializa el scheme de la base de datos.
    */
-  async init(scheme: ItScheme, version: number) {
+  async init(migration: ItMigration, version: number) {
     //console.debug("DB.init");
     await this.open()
 
@@ -183,12 +183,12 @@ export default class DB {
 
     // Valida la version actual con la version del archivo
     if (dbVersion == 0) {
-      await scheme.onCreate(this);
-      await scheme.onPostCreate(this);
+      await migration.onCreate(this);
+      await migration.onPostCreate(this);
 
     } else if (dbVersion != version) {
-      await scheme.onUpdate(this, dbVersion, version);
-      await scheme.onPostUpdate(this, dbVersion, version);
+      await migration.onUpdate(this, dbVersion, version);
+      await migration.onPostUpdate(this, dbVersion, version);
     }
 
     // Setea la nueva version en la base de datos

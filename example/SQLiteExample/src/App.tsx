@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Provider as PaperProvider } from 'react-native-paper';
 import { DB } from 'react-native-sqlite-manager';
 
-import Scheme from './db/Scheme';
+import Migration from './db/Migration';
 import AppNavigator from './navigation/AppNavigator';
 
 export default function App() {
@@ -15,7 +15,7 @@ export default function App() {
     const db = DB.get(/*database name*/"example.db")
 
     // Initialize the database schema.
-    db.init(new Scheme(), /*database version*/ 1).then(() => {
+    db.init(new Migration(), /*database version*/ 1).then(() => {
       setLoading(false)
     })
 

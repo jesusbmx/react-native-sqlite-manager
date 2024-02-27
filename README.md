@@ -52,7 +52,7 @@ function App(): JSX.Element {
     // We get a database instance by name. 
     const db = DB.get(/*database name*/"example.db")
     // Initialize the database schema.
-    db.init(new Scheme(), /*database version*/ 1).then(() => {
+    db.init(new Migration(), /*database version*/ 1).then(() => {
       setLoading(false)
     })
 
@@ -77,35 +77,33 @@ function App(): JSX.Element {
 ```
 
 ### Defining the Schema
-Define your database schema by creating a class that extends ItScheme:
+Define your database Schema by creating a class that extends ItMigration:
 
 ```js
-import { DB, ItScheme } from 'react-native-sqlite-manager';
+import { DB, ItMigration, Schema } from 'react-native-sqlite-manager';
 
-export default class Scheme extends ItScheme {
+export default class Migration extends ItMigration {
     
   /**
    * When the database is created
    * @param db
    */
   async onCreate(db: DB) {
-    await db.executeSql(`
-      CREATE TABLE IF NOT EXISTS tb_animals (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-        name TEXT NOT NULL, 
-        color TEXT NOT NULL, 
-        age INTEGER NOT NULL, 
-        timestamp INTEGER NOT NULL
-      );
-    `)
+    const scheme = new Schema(db)
+
+    await scheme.create("tb_animals", (table) => {
+      table.increments("id")
+      table.text("name")
+      table.text("color")
+      table.integer("age")
+      table.integer("timestamp")
+    });
   }
 
 }
 ```
 
 ## Query Builder
-
-Only available from version `0.3.3`
 
 #### Select
 ```js
@@ -300,35 +298,34 @@ const { rowsAffected } = await db.executeSql(`
 
 ```js
 const db = DB.get(/*name*/ "myApp.db")
-db.init(new Scheme(), /*version*/ 2).then(() => {
+db.init(new Migration(), /*version*/ 2).then(() => {
   setLoading(false)
 })
 ```
-In the code above, we use `DB.get("myApp.db")` to access the database instance, `new Scheme()` to create an updated database schema, and 2 to set the new database version.
+In the code above, we use `DB.get("myApp.db")` to access the database instance, `new Migration()` to create an updated database schema, and 2 to set the new database version.
 
 ### Updated Schema
 
-In the updated schema class, you can define changes to the database structure for the new version. For example, you can add new columns to existing tables. Here's an example of an updated schema class:
+In the updated Migration class, you can define changes to the database structure for the new version. For example, you can add new columns to existing tables. Here's an example of an updated schema class:
 ```js
-import { DB, ItScheme, table } from 'react-native-sqlite-manager';
+import { DB, ItMigration, Schema } from 'react-native-sqlite-manager';
 
-export default class Scheme extends ItScheme {
+export default class Migration extends ItMigration {
     
   /**
    * When the database is created
    * @param db
    */
   async onCreate(db: DB) {
-    await db.executeSql(`
-      CREATE TABLE IF NOT EXISTS tb_animals (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-        name TEXT NOT NULL, 
-        color TEXT NOT NULL, 
-        age INTEGER NOT NULL, 
-        timestamp INTEGER NOT NULL,
-        description TEXT NOT NULL
-      );
-    `)
+     const scheme = new Schema(db)
+
+    await scheme.create("tb_animals", (table) => {
+      table.increments("id")
+      table.text("name")
+      table.text("color")
+      table.integer("age")
+      table.integer("timestamp")
+    });
   }
   
   /**
@@ -341,14 +338,14 @@ export default class Scheme extends ItScheme {
     if (oldVersion != newVersion) {
       // update version db
 
-      await table(db, "tb_animals").addColumns([
-        new Column("description", "TEXT").defaultVal("") 
-      ])
+      await scheme.alter("tb_animals", (table) => {
+        table.text("description").defaultVal("") 
+      });
     }
   }
 }
 ```
-In the `Scheme` class, you can add new database structure changes as needed for the updated version, such as adding new
+In the `Migration` class, you can add new database structure changes as needed for the updated version, such as adding new
 
 ## DB Class
 

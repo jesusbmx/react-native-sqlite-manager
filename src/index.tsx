@@ -1,9 +1,8 @@
-import ColumnInfo from "./ColumnInfo";
 import DB, { type ResultSet } from "./DB";
-import ItScheme from "./ItScheme";
+import ItMigration from "./ItMigration";
 import Model from "./Model";
 import QueryBuilder, { type QueryOptions, type Where} from "./QueryBuilder";
-import TableInfo from "./TableInfo";
+import Schema, { Column, Constraint, Index, Table } from "./Schema"
 
 export type {
   QueryOptions,
@@ -12,14 +11,9 @@ export type {
 }
 
 export {
-  ColumnInfo,
-  DB,
-  ItScheme,
+  DB, ItMigration,
   Model,
   QueryBuilder,
-  TableInfo
+  Schema, Column, Constraint, Index, Table
 }
 
-export function table(db: DB, tableName: string): TableInfo {
-  return new TableInfo(db, tableName)
-}

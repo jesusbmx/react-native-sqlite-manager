@@ -1,7 +1,7 @@
-import { DB, ItScheme } from 'react-native-sqlite-manager';
+import { DB, ItMigration } from 'react-native-sqlite-manager';
 import Animal from '../model/Animal';
 
-export default class Scheme extends ItScheme {
+export default class Migration extends ItMigration {
     
   /**
    * When the database is created
