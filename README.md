@@ -52,7 +52,7 @@ function App(): JSX.Element {
     // We get a database instance by name. 
     const db = DB.get(/*database name*/"example.db")
     // Initialize the database schema.
-    db.init(new Migration(), /*database version*/ 1).then(() => {
+    db.migrate(new Migration(), /*database version*/ 1).then(() => {
       setLoading(false)
     })
 
@@ -89,9 +89,9 @@ export default class Migration extends ItMigration {
    * @param db
    */
   async onCreate(db: DB) {
-    const scheme = new Schema(db)
+    const schema = new Schema(db)
 
-    await scheme.create("tb_animals", (table) => {
+    await schema.create("tb_animals", (table) => {
       table.increments("id")
       table.text("name")
       table.text("color")
@@ -298,7 +298,7 @@ const { rowsAffected } = await db.executeSql(`
 
 ```js
 const db = DB.get(/*name*/ "myApp.db")
-db.init(new Migration(), /*version*/ 2).then(() => {
+db.migrate(new Migration(), /*version*/ 2).then(() => {
   setLoading(false)
 })
 ```
@@ -317,14 +317,15 @@ export default class Migration extends ItMigration {
    * @param db
    */
   async onCreate(db: DB) {
-     const scheme = new Schema(db)
+     const schema = new Schema(db)
 
-    await scheme.create("tb_animals", (table) => {
+    await schema.create("tb_animals", (table) => {
       table.increments("id")
       table.text("name")
       table.text("color")
       table.integer("age")
       table.integer("timestamp")
+      table.text("description").defaultVal("") // db version 2
     });
   }
   
@@ -337,9 +338,9 @@ export default class Migration extends ItMigration {
   async onUpdate(db: DB, oldVersion: number, newVersion: number) {
     if (oldVersion != newVersion) {
       // update version db
-
-      await scheme.alter("tb_animals", (table) => {
-        table.text("description").defaultVal("") 
+      const schema = new Schema(db)
+      await schema.alter("tb_animals", (table) => {
+        table.text("description").defaultVal("") // db version 2
       });
     }
   }
@@ -443,13 +444,13 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 ---
 
-### `init(scheme: ItScheme, version: number): void`
+### `init(migration: ItMigration, version: number): void`
 
 - Initializes the database schema.
 
   **Parameters:**
   
-  - `scheme` (ItScheme): Database schema.
+  - `migration` (ItMigration): Database schema.
   - `version` (number): New version number for the database.
 
 ---

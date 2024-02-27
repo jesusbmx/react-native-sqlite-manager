@@ -174,8 +174,8 @@ export default class DB {
   /**
    * Inicializa el scheme de la base de datos.
    */
-  async init(migration: ItMigration, version: number) {
-    //console.debug("DB.init");
+  async migrate(migration: ItMigration, version: number) {
+    //console.debug("DB.migrate");
     await this.open()
 
     // Obtiene la version actual de la db
