@@ -5918,10 +5918,10 @@ react-native-screens@^3.27.0, "react-native-screens@>= 3.0.0":
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
-react-native-sqlite-manager@^0.3.6:
-  version "0.3.6"
-  resolved "https://registry.npmjs.org/react-native-sqlite-manager/-/react-native-sqlite-manager-0.3.6.tgz"
-  integrity sha512-UH+atyg55wO8HZ89pDTP6cuGCe3lKqDIlu4XvjdpClqMyM/dncy/sWZ4QuBtXQbf6GLxc/2+MilfeOJdDXFntQ==
+react-native-sqlite-manager@^0.4.4:
+  version "0.4.4"
+  resolved "https://registry.npmjs.org/react-native-sqlite-manager/-/react-native-sqlite-manager-0.4.4.tgz"
+  integrity sha512-cQj3hOs9BMYmYK4RHgjkVcgvvqkAOllyk7qUgFgcpieKtm/fclDs2GW/7q98Yvl1oExXCTrmDnkqD/FgRbtUMg==
 
 react-native-sqlite-storage@^6.0.1:
   version "6.0.1"

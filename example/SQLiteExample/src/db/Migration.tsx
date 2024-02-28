@@ -1,4 +1,4 @@
-import { DB, ItMigration } from 'react-native-sqlite-manager';
+import { DB, ItMigration, Schema } from 'react-native-sqlite-manager';
 import Animal from '../model/Animal';
 
 export default class Migration extends ItMigration {
@@ -17,7 +17,14 @@ export default class Migration extends ItMigration {
         timestamp INTEGER NOT NULL
       );
     `)*/
-    await Animal.createTable();
+    const schema = new Schema(db);
+    await schema.create("tb_animals", (table) => {
+      table.increments("id")
+      table.text("name")
+      table.text("color")
+      table.integer("age")
+      table.integer("timestamp")
+    })
   }
 
   /**
