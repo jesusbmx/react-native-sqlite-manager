@@ -112,18 +112,18 @@ export default class Schema {
             PRAGMA table_info(${table.name})
         `)
 
-        const columns: string[] = rows.map(it => it["name"])
-        const set = new Array<Column>()
+        const existingColumnNames: string[] = rows.map(it => it["name"])
+        const missingColumns: Array<Column> = [];
 
         for (const col of table.columns) {
-            // see if the column is there
-            if (columns.some(it => col.name == it)) {
-                // missing_column not there - add it
-                set.push(col)
-            }
+          // Verifica si la columna no está presente
+          if (!existingColumnNames.includes(col.name)) {
+              // La columna no existe, añadirla al resultado
+              missingColumns.push(col);
+          }
         }
 
-        return set
+        return missingColumns
     }
 }
 
