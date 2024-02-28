@@ -59,9 +59,8 @@ function App(): JSX.Element {
   useEffect(() => {
     setLoading(true)
 
-    // We get a database instance by name. 
+    // We get a database instance by name, and Initialize the database schema.
     const db = DB.get(/*database name*/"example.db")
-    // Initialize the database schema.
     db.migrate(new Migration(), /*database version*/ 1).then(() => {
       setLoading(false)
     })
