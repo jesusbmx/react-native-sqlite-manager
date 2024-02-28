@@ -91,7 +91,7 @@ export default class Schema {
      */
     async hasTable(tableName: string): Promise<boolean> {
         const { rows } = await this.execSQL(`
-            SELECT COUNT(*) AS _count_  FROM sqlite_master WHERE type = 'table' AND name = '${tableName}'
+            SELECT COUNT(*) AS _count_ FROM sqlite_master WHERE type = 'table' AND name = '${tableName}'
         `);
 
         if (rows[0]) {
