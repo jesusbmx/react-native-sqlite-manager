@@ -53,7 +53,6 @@ Initialize the database in your React Native application as follows:
 
 ```js
 function App(): JSX.Element {
-
   const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
@@ -69,11 +68,7 @@ function App(): JSX.Element {
 
   if (loading) {
     return (
-      <ActivityIndicator 
-        animating={true} 
-        size='large' 
-        style={{flex: 1}}
-      />
+      <ActivityIndicator animating={true} size='large' style={{flex: 1}} />
     )
   }
 
@@ -99,7 +94,6 @@ export default class Migration extends ItMigration {
    */
   async onCreate(db: DB) {
     const schema = new Schema(db)
-
     await schema.create("tb_animals", (table) => {
       table.increments("id")
       table.text("name")
