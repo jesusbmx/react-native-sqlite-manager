@@ -13,10 +13,16 @@ export default class Schema {
       return this.db.executeSql(sql)
     }
 
+    /**
+     * Crea la tabla
+     * @param tableName 
+     * @param closure 
+     * @returns 
+     */
     async create(
       tableName: string, 
-      closure: (table: Table
-    ) => void): Promise<Table> {
+      closure: (table: Table) => void
+    ): Promise<Table> {
 
         const table = new Table(tableName)
         await closure(table)
@@ -34,11 +40,13 @@ export default class Schema {
 
     /**
      * Agrega las columnas nuevas que no existen fisicamente en la tabla.
+     * @param tableName 
+     * @param closure 
      */
     async alter(
       tableName: string, 
-      closure: (table: Table
-    ) => void): Promise<Table> {
+      closure: (table: Table) => void
+    ): Promise<Table> {
       
         const table = new Table(tableName)
         await closure(table)
@@ -61,13 +69,29 @@ export default class Schema {
     }
 
     /**
+     * Crea o modifica la tabla
+     * @param tableName 
+     * @param closure 
+     * @returns 
+     */
+    async createOrAlter(
+      tableName: string, 
+      closure: (table: Table) => void
+    ): Promise<Table> {
+
+      if (await this.hasTable(tableName)) {
+        return await this.alter(tableName, closure);
+      } else {
+        return await this.create(tableName, closure);
+      }
+    }
+
+    /**
      * Valida si existe una tabla en la base de datos.
      */
     async hasTable(tableName: string): Promise<boolean> {
         const { rows } = await this.execSQL(`
-            SELECT COUNT(*) AS _count_ 
-            FROM sqlite_master 
-            WHERE type = 'table' AND name = '${tableName}'
+            SELECT COUNT(*) AS _count_  FROM sqlite_master WHERE type = 'table' AND name = '${tableName}'
         `);
 
         if (rows[0]) {

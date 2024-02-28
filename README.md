@@ -37,6 +37,16 @@ const { rows } = await db.executeSql(`
 `)
 ```
 
+Get row values
+
+```js
+for (const row of rows) {
+  const id = row["id"]
+  const name = row["name"]
+  const color = row["color"]
+}
+```
+
 ## Create database
 
 Initialize the database in your React Native application as follows:
@@ -444,7 +454,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 ---
 
-### `init(migration: ItMigration, version: number): void`
+### `migrate(migration: ItMigration, version: number): void`
 
 - Initializes the database schema.
 
