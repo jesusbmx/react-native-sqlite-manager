@@ -10,11 +10,11 @@ function AnimalDetailsScreen({navigation, route}: any): JSX.Element {
 
   const { id } = route.params;
 
-  const [animal, setAnimal] = useState<Animal>({})
+  const [animal, setAnimal] = useState<Animal>(new Animal())
 
   useEffect(() => {
-    Animal.find(id).then(row => {
-      setAnimal(row);
+    Animal.find<Animal>(id).then(row => {
+      setAnimal(row!);
     })
     .catch((err) => console.debug(err));
 

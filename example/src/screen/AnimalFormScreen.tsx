@@ -17,7 +17,7 @@ function AnimalFormScreen({navigation, route}: any): JSX.Element {
   useEffect(() => {
     if (isEdit) {
       // get record and set form fields
-      Animal.find(id).then(row => {
+      Animal.find<Animal>(id).then(row => {
         form.setValues(row);
       })
       .catch((err) => console.debug(err));

@@ -18,4 +18,8 @@ export default class Animal extends Model {
   static get tableName(): string {
     return 'tb_animals'
   }
+
+  print() {
+    console.debug("Animal.print", this.name)
+  }
 }

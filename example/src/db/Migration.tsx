@@ -8,6 +8,8 @@ export default class Migration extends ItMigration {
    * @param db
    */
   async onCreate(db: DB) {
+    console.debug("Migration.onCreate")
+
     /*await db.executeSql(`
       CREATE TABLE IF NOT EXISTS tb_animals (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
@@ -32,6 +34,8 @@ export default class Migration extends ItMigration {
    * @param db
    */
   async onPostCreate(db: DB) {
+    console.debug("Migration.onPostCreate")
+
     await Animal.create({
       name: 'Bob',
       color: 'Brown',

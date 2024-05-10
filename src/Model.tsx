@@ -139,7 +139,7 @@ export default class Model {
         const list:T[] = []
         for (let i = 0; i < result.rows.length; i++) {
           const row = result.rows.item(i);
-          list.push(row ? (new (this as any)(row) as T) : row)
+          list.push(new (this as any)(row) as T)
         }
         return list;
       })
@@ -169,7 +169,7 @@ export default class Model {
       const list:T[] = []
       for (let i = 0; i < result.rows.length; i++) {
         const row = result.rows.item(i);
-        list.push(row ? (new (this as any)(row) as T) : row)
+        list.push(new (this as any)(row) as T)
       }
       return list;
     })
