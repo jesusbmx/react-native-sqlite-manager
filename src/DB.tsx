@@ -10,6 +10,16 @@ export type SQLiteDatabase = {
   transaction: (tx: any) => void
 }
 
+export type Payload = {
+  rows: {
+    item(i: number): any;
+    raw(): any[];
+    length: number;
+  },
+  rowsAffected: number;
+  insertId?: number;
+}
+
 /**
  * Resultado de los querys
  */
@@ -83,39 +93,55 @@ export default class DB {
       this.sqlite = null;
     }
   }
- 
+
+  /**
+   * Ejecuta sentecias sql.
+   * 
+   * @param {string[]} sql sentencias
+   * @param {any[][]} params parametross
+   * 
+   * @returns {Payload[]} resultados
+   */
+  async executeBulkTransaction(
+    sqls: string[], 
+    params: any[][]
+  ): Promise<Payload[]> {
+    const db = await this.open(); // Asegurar que la base de datos está abierta.
+
+    return new Promise<Payload[]>((txResolve, txReject) => {
+      db.transaction((tx: any /*Transaction*/) => {
+
+        Promise.all(sqls.map((sql, index) => {
+
+          return new Promise<Payload>((sqlResolve, sqlReject) => {
+            tx.executeSql(sql, params[index], 
+              (_tx: any, result: Payload) => { sqlResolve(result) },
+              (error: any) => { sqlReject(error) }
+            )
+          }) // Singel Promise 
+
+        })).then(txResolve).catch(txReject) // Promise all
+      }) // transaction
+    }) // Promise transaction
+  }
+
   /**
    * Ejecuta sentecias sql.
    * 
    * @param {string} sql sentencia
    * @param {any[]} params parametros
    * 
-   * @returns {ResultSet} resultado
+   * @returns {Payload} resultado
    */
-  executeSql(
+  async executeTransaction(
     sql: string, 
     params: any[] = []
-  ): Promise<ResultSet> {
-
-    return new Promise((txResolve, txReject) => {
-      this.sqlite?.transaction((tx: any /*Transaction*/) => {
-
-        new Promise<ResultSet>((sqlResolve, sqlReject) => {
-          tx.executeSql(sql, params,
-            (_tx: any, result: any) => {
-              sqlResolve({ 
-                rows: result.rows.raw(), 
-                insertId: result.insertId,
-                rowsAffected: result.rowsAffected
-              })
-            },
-            (error: any) => { sqlReject(error) }
-          )
-        }).then(txResolve).catch(txReject)
-        
-      });
-    });
+  ): Promise<Payload> {
+    return this.executeBulkTransaction([sql], [params])
+      .then(res => res[0] as Payload)
+      .catch(error => { throw error })
   }
+
 
   /**
    * Ejecuta sentecias sql.
@@ -129,15 +155,16 @@ export default class DB {
     sqls: string[], 
     params: any[][]
   ): Promise<ResultSet[]> {
+    const db = await this.open(); // Asegurar que la base de datos está abierta.
 
-    return new Promise((txResolve, txReject) => {
-      this.sqlite?.transaction((tx: any /*Transaction*/) => {
+    return new Promise<ResultSet[]>((txResolve, txReject) => {
+      db.transaction((tx: any /*Transaction*/) => {
 
         Promise.all(sqls.map((sql, index) => {
 
           return new Promise<ResultSet>((sqlResolve, sqlReject) => {
-            tx.executeSql(sql, params[index],
-              (_tx: any, result: any) => {
+            tx.executeSql(sql, params[index], 
+              (_tx: any, result: Payload) => {
                 sqlResolve({ 
                   rows: result.rows.raw(), 
                   insertId: result.insertId,
@@ -146,11 +173,28 @@ export default class DB {
               },
               (error: any) => { sqlReject(error) }
             )
-          })
+          }) // Singel Promise 
 
-        })).then(txResolve).catch(txReject)
-      })
-    })
+        })).then(txResolve).catch(txReject) // Promise all
+      }) // transaction
+    }) // Promise transaction
+  }
+
+  /**
+   * Ejecuta sentecias sql.
+   * 
+   * @param {string} sql sentencia
+   * @param {any[]} params parametros
+   * 
+   * @returns {ResultSet} resultado
+   */
+   async executeSql(
+    sql: string, 
+    params: any[] = []
+  ): Promise<ResultSet> {
+    return this.executeBulkSql([sql], [params])
+      .then(res => res[0] as ResultSet)
+      .catch(error => { throw error })
   }
 
   /**

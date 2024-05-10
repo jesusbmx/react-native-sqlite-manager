@@ -1,9 +1,10 @@
 import React from 'react'
 import { List } from 'react-native-paper'
+import Animal from '../model/Animal';
 
 export type Props = {
-  item: any;
-  onPress: (item: any) => void;
+  item: Animal;
+  onPress: (item: Animal) => void;
 }
 
 function AnimalListItem(props: Props): JSX.Element {

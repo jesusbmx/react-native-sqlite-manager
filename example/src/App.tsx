@@ -15,7 +15,7 @@ export default function App() {
     const db = DB.get(/*database name*/"example.db")
 
     // Initialize the database schema.
-    db.init(new Migration(), /*database version*/ 1).then(() => {
+    db.migrate(new Migration(), /*database version*/ 1).then(() => {
       setLoading(false)
     })
 

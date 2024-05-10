@@ -1,11 +1,11 @@
-import DB, { type ResultSet } from './DB';
+import DB, { type Payload, type ResultSet } from './DB';
 import QueryBuilder, { type QueryOptions } from './QueryBuilder';
 
 // Representa un modelos de base de datos
 export default class Model {
 
-  static get datebasaName(): string {
-    throw new Error('datebasaName not defined')
+  static get databasaName(): string {
+    throw new Error('databasaName not defined')
   }
 
   static get tableName(): string {
@@ -29,13 +29,20 @@ export default class Model {
    * ```
    * @return {ResultSet} result
    */
-  static async executeSql(
+  static executeSql(
     sql: string, 
     params: any[] = []
   ): Promise<ResultSet> {
-    const db = DB.get(this.datebasaName);
-    await db.open();
-    return await db.executeSql(sql, params);
+    const db = DB.get(this.databasaName);
+    return db.executeSql(sql, params);
+  }
+
+  static executeTransaction(
+    sql: string, 
+    params: any[] = []
+  ): Promise<Payload> {
+    const db = DB.get(this.databasaName);
+    return db.executeTransaction(sql, params);
   }
 
   /**
@@ -123,12 +130,19 @@ export default class Model {
    * ```
    * @return array con todos los registros
    */
-  static all(): Promise<any[]> {
+  static all<T extends Model>(): Promise<T[]> {
     const sql = `
       SELECT * FROM ${this.tableName}
     `
-    return this.executeSql(sql)
-      .then(result => result.rows)
+    return this.executeTransaction(sql)
+      .then(result => {
+        const list:T[] = []
+        for (let i = 0; i < result.rows.length; i++) {
+          const row = result.rows.item(i);
+          list.push(row ? (new (this as any)(row) as T) : row)
+        }
+        return list;
+      })
   }
   
 
@@ -148,10 +162,17 @@ export default class Model {
    * @param {QueryOptions} options
    * @returns array de registros
    */
-  static query(options: QueryOptions = {}): Promise<any[]> {
+  static query<T extends Model>(options: QueryOptions = {}): Promise<any[]> {
     const sql = QueryBuilder.buildSelect(this.tableName, options);
-    return this.executeSql(sql, options.where?.args)
-      .then(result => result.rows)
+    return this.executeTransaction(sql, options.where?.args)
+    .then(result => {
+      const list:T[] = []
+      for (let i = 0; i < result.rows.length; i++) {
+        const row = result.rows.item(i);
+        list.push(row ? (new (this as any)(row) as T) : row)
+      }
+      return list;
+    })
   }
 
   /**

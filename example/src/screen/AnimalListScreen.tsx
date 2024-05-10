@@ -7,7 +7,7 @@ import Animal from "../model/Animal";
 import AnimalListItem from "../components/AnimalListItem";
 
 function AnimalListScreen({navigation, route}: any): JSX.Element {
-    const [items, setItems] = useState<any[]>([])
+    const [items, setItems] = useState<Animal[]>([])
   
     useEffect(() => {
       updateList();
@@ -24,7 +24,7 @@ function AnimalListScreen({navigation, route}: any): JSX.Element {
     // Cuando se modifica un registro
     useOnEvent('Animal.onUpdate', updateList)
   
-    const handleOnPressItem = (item: any) => {
+    const handleOnPressItem = (item: Animal) => {
       navigation.navigate("AnimalDetailsScreen", {
         id: item.id,
       })

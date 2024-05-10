@@ -32,24 +32,6 @@ class QueryBuilder {
     this.tableName = tableName;
   }
 
-  // SELECT
-  static buildSelect(tableName: string, options: QueryOptions): string {
-    const { columns = "*", where, order, limit, page } = options;
-  
-    const sqlParts = [
-      'SELECT',
-      columns,
-      'FROM',
-      tableName,
-      where && where.clause ? `WHERE ${where.clause}` : '',
-      order ? `ORDER BY ${order}` : '',
-      limit ? `LIMIT ${limit}` : '',
-      page && limit ? `OFFSET ${limit * (page - 1)}` : '',
-    ];
-  
-    return sqlParts.filter(Boolean).join(' ');
-  }  
-
   select(columns: string): this {
     this._columns = columns;
     return this;
@@ -159,6 +141,24 @@ class QueryBuilder {
     return this.db.executeSql(sql, this._whereArgs)
       .then(result => result.rowsAffected)
   }
+
+  // SELECT
+  static buildSelect(tableName: string, options: QueryOptions): string {
+    const { columns = "*", where, order, limit, page } = options;
+  
+    const sqlParts = [
+      'SELECT',
+      columns,
+      'FROM',
+      tableName,
+      where && where.clause ? `WHERE ${where.clause}` : '',
+      order ? `ORDER BY ${order}` : '',
+      limit ? `LIMIT ${limit}` : '',
+      page && limit ? `OFFSET ${limit * (page - 1)}` : '',
+    ];
+  
+    return sqlParts.filter(Boolean).join(' ');
+  }  
 
   // Creates the "INSERT" sql statement
   static buildInsert(tableName: string, object: any): string {

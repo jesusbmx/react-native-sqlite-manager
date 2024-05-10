@@ -2,7 +2,7 @@
 
 Tool that simplifies management and access to SQLite databases in React Native applications
 
-[Example](example/SQLiteExample)
+[Example](example)
 
 #### Dependencies
 ```sh
@@ -163,7 +163,7 @@ import { Model } from 'react-native-sqlite-manager';
 
 export default class Animal extends Model {
 
-  static get datebasaName(): string {
+  static get databasaName(): string {
     return 'example.db'
   }
 
@@ -620,7 +620,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 ### Static Properties
 
-#### `datebasaName: string`
+#### `databasaName: string`
 
 - **Type:** `string`
 - **Description:** Name of the database. Throws an error if not defined.
