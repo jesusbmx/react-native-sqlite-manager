@@ -23,10 +23,10 @@ You just have to import the library like this:
 import { DB } from 'react-native-sqlite-manager';
 ```
 
-Open the database using
+Get a database instance using:
 
 ```js
-const db = await DB.open("example.db");
+const db = DB.get("example.db");
 ```
 
 Now, whenever you need to make some database call you can use db variable to execute the database query.
@@ -102,6 +102,8 @@ export default class Migration extends ItMigration {
       table.integer("age")
       table.integer("timestamp")
     });
+
+    // Define other tables here
   }
 
 }
@@ -135,6 +137,22 @@ const insertId = await db.table('tb_animals')
     age: 2,
     timestamp: Date.now(),
   })
+```
+
+#### Insert Array
+```js
+// INSERT INTO tb_animals (name, color, age, timestamp) 
+// VALUES 
+//   ('Max', 'Black', 4, 1699018870505),
+//   ('Bella', 'White', 3, 1699018870506)
+await db.table('tb_animals')
+  .insertArray(
+    ['name', 'color', 'age', 'timestamp'],
+    [
+      ['Max', 'Black', 4, Date.now()],  // First record
+      ['Bella', 'White', 3, Date.now()]  // Second record
+    ]
+  )
 ```
 
 #### Update
@@ -359,14 +377,14 @@ export default class Migration extends ItMigration {
   }
 }
 ```
-In the `Migration` class, you can add new database structure changes as needed for the updated version, such as adding new
 
-## DB Class
+
+## `DB` Class
 
 ### `constructor(name: string)`
 
 - Initializes the `DB` instance.
-  
+
   **Parameters:**
   
   - `name` (string): Name of the database.
@@ -459,18 +477,18 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 ### `migrate(migration: ItMigration, version: number): void`
 
-- Initializes the database schema.
+- Initializes the database schema and applies migrations for the specified version.
 
   **Parameters:**
   
-  - `migration` (ItMigration): Database schema.
+  - `migration` (ItMigration): Instance of the `ItMigration` class defining schema changes.
   - `version` (number): New version number for the database.
 
 ---
 
 ### `table(tableName: string): QueryBuilder`
 
-- Gets a `QueryBuilder` for the specified table.
+- Returns a `QueryBuilder` instance for interacting with a specific table.
 
   **Parameters:**
   
@@ -478,38 +496,35 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Returns:**
   
-  - `QueryBuilder`: Instance of `QueryBuilder`.
+  - `QueryBuilder`: Instance of the `QueryBuilder` for building and executing queries.
 
 ---
 
-## ResultSet Type
+## `ResultSet` Type
 
 ### `insertId?: number`
 
-- **Type:** `number | undefined`
-- **Description:** The ID of the last inserted row, if applicable.
+- The ID of the last inserted row, if applicable.
 
 ---
 
 ### `rowsAffected: number`
 
-- **Type:** `number`
-- **Description:** The number of rows affected by the query.
+- The number of rows affected by the query.
 
 ---
 
 ### `rows: any[]`
 
-- **Type:** `any[]`
-- **Description:** An array containing the result rows of the query.
+- An array containing the result rows of the query.
 
 ---
 
-## QueryBuilder Class
+## `QueryBuilder` Class
 
 ### `constructor(database: DB, tableName: string)`
 
-- Initializes the `QueryBuilder` instance.
+- Initializes the `QueryBuilder` for a specific table.
 
   **Parameters:**
   
@@ -625,21 +640,137 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 ---
 
-## Model Class
+## `ItMigration` Class
+
+### `onCreate(db: DB): void`
+
+- Abstract method that must be implemented to define the actions to perform when the database is created.
+
+  **Parameters:**
+  
+  - `db` (DB): The instance of the database being created.
+
+---
+
+### `onPostCreate(db: DB): void`
+
+- Method that can be optionally overridden to define actions to perform after the database is created.
+
+  **Parameters:**
+  
+  - `db` (DB): The instance of the database.
+
+---
+
+### `onUpdate(db: DB, oldVersion: number, newVersion: number): void`
+
+- Method that can be overridden to define actions to perform when the database is updated to a new version.
+
+  **Parameters:**
+  
+  - `db` (DB): The instance of the database.
+  - `oldVersion` (number): The previous version of the database.
+  - `newVersion` (number): The new version of the database.
+
+---
+
+### `onPostUpdate(db: DB, oldVersion: number, newVersion: number): void`
+
+- Method that can be optionally overridden to define actions to perform after the database update is completed.
+
+  **Parameters:**
+  
+  - `db` (DB): The instance of the database.
+  - `oldVersion` (number): The previous version of the database.
+  - `newVersion` (number): The new version of the database.
+
+---
+
+## `Schema` Class
+
+### `constructor(db: DB)`
+
+- Initializes the `Schema` instance, which is responsible for creating, altering, and managing tables in the database.
+
+  **Parameters:**
+  
+  - `db` (DB): Instance of the database.
+
+---
+
+### `execSQL(sql: string): Promise<ResultSet>`
+
+- Executes an SQL statement and returns a promise resolving to the result.
+
+  **Parameters:**
+  
+  - `sql` (string): SQL statement to be executed.
+
+  **Returns:**
+  
+  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+
+---
+
+### `create(tableName: string, closure: (table: Table) => void): Promise<Table>`
+
+- Creates a new table in the database.
+
+  **Parameters:**
+  
+  - `tableName` (string): Name of the table to be created.
+  - `closure` (function): Function that defines the columns and constraints of the table.
+
+  **Returns:**
+  
+  - `Promise<Table>`: Promise resolving to the created `Table` instance.
+
+---
+
+### `alter(tableName: string, closure: (table: Table) => void): Promise<Table>`
+
+- Alters an existing table by adding new columns that do not already exist.
+
+  **Parameters:**
+  
+  - `tableName` (string): Name of the table to be altered.
+  - `closure` (function): Function that defines the new columns and constraints to be added.
+
+  **Returns:**
+  
+  - `Promise<Table>`: Promise resolving to the altered `Table` instance.
+
+---
+
+### `createOrAlter(tableName: string, closure: (table: Table) => void): Promise<Table>`
+
+- Create or modify the table
+
+  **Parameters:**
+  
+  - `tableName` (string): Name of the table.
+  - `closure` (function): Function that defines the new columns and constraints to be added.
+
+  **Returns:**
+  
+  - `Promise<Table>`: Promise resolving to the altered `Table` instance.
+
+
+## `Model` Class
 
 ### Static Properties
 
 #### `databasaName: string`
 
 - **Type:** `string`
-- **Description:** Name of the database. Throws an error if not defined.
+- **Description:** Name of the database. Must be defined in the model class.
 
 ---
 
 #### `tableName: string`
 
 - **Type:** `string`
-- **Description:** Name of the table. Throws an error if not defined.
+- **Description:** Name of the table associated with the model. Must be defined in the model class.
 
 ---
 
@@ -647,7 +778,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 - **Type:** `string`
 - **Default:** `"id"`
-- **Description:** Primary key of the table. Defaults to `"id"`.
+- **Description:** The primary key of the table. Defaults to `"id"`.
 
 ---
 
@@ -667,7 +798,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 #### `getProperties(): any`
 
-- Gets all properties of the model instance.
+- Returns all properties of the model instance.
 
   **Returns:**
   
@@ -675,7 +806,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 ---
 
-#### `setProperties(props: any)`
+#### `setProperties(props: any): void`
 
 - Sets properties on the model instance.
 
@@ -687,7 +818,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
 #### `save(): Promise<any | undefined>`
 
-- Saves the model instance to the database. Creates a new record if the primary key is not set; otherwise, updates the existing record.
+- Saves the model instance to the database. If the primary key is not set, a new record is created; otherwise, the existing record is updated.
 
   **Returns:**
   
@@ -713,7 +844,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Parameters:**
   
-  - `sql` (string): SQL query.
+  - `sql` (string): SQL query string.
   - `params` (any[]): Parameters for the SQL query. Default is an empty array.
 
   **Returns:**
@@ -728,23 +859,23 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Returns:**
   
-  - `Promise<any[]>`: Promise resolving to an array of records.
+  - `Promise<any[]>`: Promise resolving to an array of all records.
 
 ---
 
-#### `findBy(column: string, op: string, value: string): Promise<any | undefined>`
+#### `findBy(column: string, op: string, value: any): Promise<any | undefined>`
 
-- Finds a record by a specified column and value.
+- Finds a record by a specified column, comparison operator, and value.
 
   **Parameters:**
   
-  - `column` (string): Name of the column to search.
-  - `op` (string): Comparison operator (e.g., "=", "<>", "LIKE").
-  - `value` (string): Value to search for.
+  - `column` (string): Column name.
+  - `op` (string): Comparison operator (e.g., "=", ">", "<").
+  - `value` (any): Value to compare against.
 
   **Returns:**
   
-  - `Promise<any | undefined>`: Promise resolving to the found record.
+  - `Promise<any | undefined>`: Promise resolving to the found record, or undefined if not found.
 
 ---
 
@@ -758,7 +889,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Returns:**
   
-  - `Promise<any | undefined>`: Promise resolving to the found record.
+  - `Promise<any | undefined>`: Promise resolving to the found record, or undefined if not found.
 
 ---
 
@@ -768,7 +899,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Returns:**
   
-  - `Promise<any | null>`: Promise resolving to the first record.
+  - `Promise<any | null>`: Promise resolving to the first record, or null if no records exist.
 
 ---
 
@@ -778,7 +909,7 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Returns:**
   
-  - `Promise<any | null>`: Promise resolving to the last record.
+  - `Promise<any | null>`: Promise resolving to the last record, or null if no records exist.
 
 ---
 
@@ -798,11 +929,11 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Parameters:**
   
-  - `options` (QueryOptions): Options for the query.
+  - `options` (QueryOptions): Query options, such as columns to select, conditions, limit, etc.
 
   **Returns:**
   
-  - `Promise<any[]>`: Promise resolving to an array of records.
+  - `Promise<any[]>`: Promise resolving to an array of records matching the query.
 
 ---
 
@@ -844,7 +975,15 @@ In the `Migration` class, you can add new database structure changes as needed f
 
   **Returns:**
   
-  - `Promise<number>`:
+  - `Promise<number>`: Promise resolving to the number of affected rows.
+
+
+
+
+
+
+
+
 
 ## Contributing
 
