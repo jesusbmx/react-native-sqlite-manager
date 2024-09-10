@@ -500,6 +500,7 @@ export default class Migration extends ItMigration {
 
 ---
 
+
 ## `ResultSet` Type
 
 ### `insertId?: number`
@@ -519,6 +520,7 @@ export default class Migration extends ItMigration {
 - An array containing the result rows of the query.
 
 ---
+
 
 ## `QueryBuilder` Class
 
@@ -640,6 +642,7 @@ export default class Migration extends ItMigration {
 
 ---
 
+
 ## `ItMigration` Class
 
 ### `onCreate(db: DB): void`
@@ -685,6 +688,7 @@ export default class Migration extends ItMigration {
   - `newVersion` (number): The new version of the database.
 
 ---
+
 
 ## `Schema` Class
 
@@ -754,6 +758,143 @@ export default class Migration extends ItMigration {
   **Returns:**
   
   - `Promise<Table>`: Promise resolving to the altered `Table` instance.
+
+## `Table` Class
+
+### `constructor(name: string)`
+
+- Initializes a new `Table` instance.
+
+  **Parameters:**
+  
+  - `name` (string): The name of the table.
+
+---
+
+### `addColumn(columname: string, type: string): Column`
+
+- Adds a new column to the table with the specified name and type.
+
+  **Parameters:**
+  
+  - `columname` (string): The name of the column.
+  - `type` (string): The data type of the column.
+
+  **Returns:**
+  
+  - `Column`: The created column.
+
+---
+
+### `increments(column: string): Column`
+
+- Adds an auto-incrementing primary key to the table.
+
+  **Parameters:**
+  
+  - `column` (string): The name of the primary key column.
+
+  **Returns:**
+  
+  - `Column`: The auto-incrementing primary key column.
+
+---
+
+### `integer(column: string): Column`
+
+- Adds an `INTEGER` column to the table.
+
+  **Parameters:**
+  
+  - `column` (string): The name of the column.
+
+  **Returns:**
+  
+  - `Column`: The created `INTEGER` column.
+
+---
+
+### `float(column: string): Column`
+
+- Adds a `FLOAT` column to the table.
+
+  **Parameters:**
+  
+  - `column` (string): The name of the column.
+
+  **Returns:**
+  
+  - `Column`: The created `FLOAT` column.
+
+---
+
+### `real(column: string): Column`
+
+- Adds a `REAL` (decimal) column to the table with a precision and scale.
+
+  **Parameters:**
+  
+  - `column` (string): The name of the column.
+
+  **Returns:**
+  
+  - `Column`: The created `REAL` column.
+
+---
+
+### `text(column: string): Column`
+
+- Adds a `TEXT` (VARCHAR equivalent) column to the table.
+
+  **Parameters:**
+  
+  - `column` (string): The name of the column.
+
+  **Returns:**
+  
+  - `Column`: The created `TEXT` column.
+
+---
+
+### `blob(column: string): Column`
+
+- Adds a `BLOB` (binary) column to the table.
+
+  **Parameters:**
+  
+  - `column` (string): The name of the column.
+
+  **Returns:**
+  
+  - `Column`: The created `BLOB` column.
+
+---
+
+### `foreign(columnname: string): Constraint`
+
+- Adds a foreign key constraint to the specified column.
+
+  **Parameters:**
+  
+  - `columnname` (string): The name of the column that will have the foreign key.
+
+  **Returns:**
+  
+  - `Constraint`: The created foreign key constraint.
+
+---
+
+### `index(indexname: string): Index`
+
+- Adds an index to the specified column in the table.
+
+  **Parameters:**
+  
+  - `indexname` (string): The name of the index.
+
+  **Returns:**
+  
+  - `Index`: The created index.
 
 
 ## `Model` Class
