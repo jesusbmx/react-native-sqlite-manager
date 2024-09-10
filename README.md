@@ -146,8 +146,7 @@ const insertId = await db.table('tb_animals')
 //   ('Max', 'Black', 4, 1699018870505),
 //   ('Bella', 'White', 3, 1699018870506)
 await db.table('tb_animals')
-  .insertArray(
-    ['name', 'color', 'age', 'timestamp'],
+  .insertArray(['name', 'color', 'age', 'timestamp'],
     [
       ['Max', 'Black', 4, Date.now()],  // First record
       ['Bella', 'White', 3, Date.now()]  // Second record
