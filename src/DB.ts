@@ -200,19 +200,18 @@ export default class DB {
   /**
    * Obtiene el numero de version de la db
    */
-  getVersion(): Promise<number> {
-    return this.executeSql("PRAGMA user_version")
-      .then(({rows}) => rows[0])
-      .then((row) => row.user_version ?? 0);
+  async getVersion(): Promise<number> {
+    const { rows } = await this.executeSql("PRAGMA user_version");
+    const row = rows[0];
+    return row.user_version ?? 0;
   }
 
   /**
    * Establece la versión de la base de datos.
    * @param {int} version la nueva versión de la base de datos
    */
-  setVersion(version: number) {
-    return this.executeSql("PRAGMA user_version = " + version)
-      .then(({rows}) => rows[0]);
+  async setVersion(version: number) {
+    await this.executeSql("PRAGMA user_version = " + version)
   }
 
   /**
@@ -236,7 +235,7 @@ export default class DB {
     }
 
     // Setea la nueva version en la base de datos
-    this.setVersion(version);
+    await this.setVersion(version);
   }
 
   /**

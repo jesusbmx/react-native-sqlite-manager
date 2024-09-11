@@ -63,7 +63,7 @@ class QueryBuilder {
    * 
    * @returns array de registros
    */ 
-  get(): Promise<any[]> {
+  async get(): Promise<any[]> {
     const sql = QueryBuilder.buildSelect(this.tableName, {
       columns: this._columns,
       where: {
@@ -75,8 +75,8 @@ class QueryBuilder {
       page: this._page,
     });
 
-    return this.db.executeSql(sql, this._whereArgs)
-      .then((result: ResultSet) => result.rows)
+    const result = await this.db.executeSql(sql, this._whereArgs);
+    return result.rows;
   }
 
   /** 
@@ -85,12 +85,12 @@ class QueryBuilder {
    * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
    * @returns insertId
    */
-  insert(columnValues: any): Promise<number> {
+  async insert(columnValues: any): Promise<number> {
     var sql = QueryBuilder.buildInsert(this.tableName, columnValues)
     const params = Object.values(columnValues)
     
-    return this.db.executeSql(sql, params)
-      .then(result => result.insertId ?? -1)
+    const result = await this.db.executeSql(sql, params);
+    return result.insertId ?? -1;
   }
 
   /** 
@@ -118,15 +118,15 @@ class QueryBuilder {
    * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
    * @returns rowsAffected
    */
-  update(columnValues: any): Promise<number> {
+  async update(columnValues: any): Promise<number> {
     const sql = QueryBuilder.buildUpdate(
       this.tableName, columnValues, this._whereClause)
 
     const params = Object.values(columnValues)
     const whereArgs = this._whereArgs ?? []
 
-    return this.db.executeSql(sql, [...params, ...whereArgs])
-      .then(result => result.rowsAffected)
+    const result = await this.db.executeSql(sql, [...params, ...whereArgs])
+    return result.rowsAffected;
   }
 
   /** 
@@ -134,12 +134,12 @@ class QueryBuilder {
    * 
    * @returns rowsAffected
    */
-  delete(): Promise<number> {
+  async delete(): Promise<number> {
     const sql = QueryBuilder.buildDelete(
       this.tableName, this._whereClause)
 
-    return this.db.executeSql(sql, this._whereArgs)
-      .then(result => result.rowsAffected)
+    const result = await this.db.executeSql(sql, this._whereArgs);
+    return result.rowsAffected;
   }
 
   /**  

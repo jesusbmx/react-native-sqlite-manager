@@ -54,16 +54,16 @@ export default class Model {
    * @param value qriterio de busqueda
    * @return registro
    */
-  static findBy<T extends Model>(
+  static async findBy<T extends Model>(
     column: string, op: string, value: string
   ): Promise<T | undefined> {
     
     const sql = `
       SELECT * FROM ${this.tableName} WHERE ${column} ${op} ?
     `
-    return this.executeSql(sql, [value])
-      .then(result => result.rows[0])
-      .then(row => row ? (new (this as any)(row) as T) : row)
+    const result = await this.executeSql(sql, [value]);
+    const row = result.rows[0];
+    return row ? (new (this as any)(row) as T) : undefined;
   }
 
   /**
@@ -85,13 +85,13 @@ export default class Model {
    * ```
    * @return primer registro
    */
-  static first<T extends Model>(): Promise<T | null> {
+  static async first<T extends Model>(): Promise<T | null> {
     const sql = `
       SELECT * FROM ${this.tableName} ORDER BY ROWID ASC LIMIT 1
     `
-    return this.executeSql(sql)
-      .then(result => result.rows[0])
-      .then(row => row ? (new (this as any)(row) as T) : row)
+    const result = await this.executeSql(sql);
+    const row = result.rows[0];
+    return row ? (new (this as any)(row) as T) : null;
   }
 
   /**
@@ -100,13 +100,13 @@ export default class Model {
    * ```
    * @return último registro
    */
-  static last<T extends Model>(): Promise<T | null> {
+  static async last<T extends Model>(): Promise<T | null> {
     const sql = `
       SELECT * FROM ${this.tableName} ORDER BY ROWID DESC LIMIT 1
     `
-    return this.executeSql(sql)
-      .then(result => result.rows[0])
-      .then(row => row ? (new (this as any)(row) as T) : row)
+    const result = await this.executeSql(sql);
+    const row = result.rows[0];
+    return row ? (new (this as any)(row) as T) : null;
   }
     
   /**
@@ -115,13 +115,13 @@ export default class Model {
    * ```
    * @return numero de registros
    */
-  static count(): Promise<number> {
+  static async count(): Promise<number> {
     const sql = `
       SELECT COUNT(*) AS __count__ FROM ${this.tableName}
     `
-    return this.executeSql(sql)
-      .then(result => result.rows[0])
-      .then((row: any) => row["__count__"])
+    const result = await this.executeSql(sql);
+    const row = result.rows[0];
+    return row["__count__"];
   }
 
   /**
@@ -130,19 +130,17 @@ export default class Model {
    * ```
    * @return array con todos los registros
    */
-  static all<T extends Model>(): Promise<T[]> {
+  static async all<T extends Model>(): Promise<T[]> {
     const sql = `
       SELECT * FROM ${this.tableName}
     `
-    return this.executeTransaction(sql)
-      .then(result => {
-        const list:T[] = []
-        for (let i = 0; i < result.rows.length; i++) {
-          const row = result.rows.item(i);
-          list.push(new (this as any)(row) as T)
-        }
-        return list;
-      })
+    const result = await this.executeTransaction(sql);
+    const list: T[] = [];
+    for (let i = 0; i < result.rows.length; i++) {
+      const row = result.rows.item(i);
+      list.push(new (this as any)(row) as T);
+    }
+    return list;
   }
   
 
@@ -162,17 +160,15 @@ export default class Model {
    * @param {QueryOptions} options
    * @returns array de registros
    */
-  static query<T extends Model>(options: QueryOptions = {}): Promise<any[]> {
+  static async query<T extends Model>(options: QueryOptions = {}): Promise<any[]> {
     const sql = QueryBuilder.buildSelect(this.tableName, options);
-    return this.executeTransaction(sql, options.where?.args)
-    .then(result => {
-      const list:T[] = []
-      for (let i = 0; i < result.rows.length; i++) {
-        const row = result.rows.item(i);
-        list.push(new (this as any)(row) as T)
-      }
-      return list;
-    })
+    const result = await this.executeTransaction(sql, options.where?.args);
+    const list: T[] = [];
+    for (let i = 0; i < result.rows.length; i++) {
+      const row = result.rows.item(i);
+      list.push(new (this as any)(row) as T);
+    }
+    return list;
   }
 
   /**
@@ -185,14 +181,14 @@ export default class Model {
    * @param obj
    * @returns registro creado
    */
-  static create<T extends Model>(
+  static async create<T extends Model>(
     obj: any
   ): Promise<T | undefined> {
     var sql = QueryBuilder.buildInsert(this.tableName, obj)
     const params = Object.values(obj)
     
-    return this.executeSql(sql, params)
-      .then(result => this.find<T>(result.insertId))
+    const result = await this.executeSql(sql, params);
+    return await this.find<T>(result.insertId);
   }
 
   /**
@@ -206,7 +202,7 @@ export default class Model {
    * @param obj
    * @returns registro actualizado
    */
-  static update<T extends Model>(
+  static async update<T extends Model>(
     obj: any | T
   ): Promise<T | undefined> {
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
@@ -217,8 +213,8 @@ export default class Model {
 
     const params = Object.values(props)
 
-    return this.executeSql(sql, [...params, id])
-     .then(_ => this.find<T>(id))
+    await this.executeSql(sql, [...params, id]);
+    return await this.find<T>(id);
   }
 
   /**
@@ -228,12 +224,12 @@ export default class Model {
    * @param id identificador
    * @returns rowsAffected
    */
-  static destroy(id: any): Promise<number> {
+  static async destroy(id: any): Promise<number> {
     const sql = QueryBuilder.buildDelete(
       this.tableName, `${this.primaryKey} = ?`)
 
-    return this.executeSql(sql, [id])
-      .then(res => res.rowsAffected)
+    const result = await this.executeSql(sql, [id]);
+    return result.rowsAffected;
   }
 
   /**
@@ -242,10 +238,10 @@ export default class Model {
    * ```
    * @returns rowsAffected
    */
-  static destroyAll(): Promise<number> {
+  static async destroyAll(): Promise<number> {
     const sql = QueryBuilder.buildDelete(this.tableName)
-    return this.executeSql(sql)
-      .then(res => res.rowsAffected)
+    const result = await this.executeSql(sql);
+    return result.rowsAffected;
   }
 
   save<T extends Model>(): Promise<T | undefined> {
