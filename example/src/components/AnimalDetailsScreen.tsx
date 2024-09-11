@@ -23,7 +23,6 @@ function AnimalDetailsScreen({navigation, route}: any): JSX.Element {
   const handleDelete = () => {
     Animal.destroy(id).then(() => {
       notifyEvent('Animal.onUpdate')
-      
       navigation.goBack()
     })
     .catch((err) => console.debug(err));

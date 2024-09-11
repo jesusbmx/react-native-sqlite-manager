@@ -179,11 +179,11 @@ Create a model for your database table by extending the Model class:
 import { Model } from 'react-native-sqlite-manager';
 
 export default class Animal extends Model {
-  public id: number;
-  public name: string;
-  public color: string;
-  public age: number;
-  public timestamp: number;
+  public id!: number;
+  public name!: string;
+  public color!: string;
+  public age!: number;
+  public timestamp!: number;
 
   constructor(props: any = {}) {
     super(props)
@@ -327,7 +327,7 @@ const { rowsAffected } = await db.executeSql(`
 ## Update database version
 
 ```js
-const db = DB.get(/*name*/ "myApp.db")
+const db = DB.get(/*name*/ "example.db")
 db.migrate(new Migration(), /*version*/ 2).then(() => {
   setLoading(false)
 })

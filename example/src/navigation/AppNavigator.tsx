@@ -2,9 +2,9 @@ import React, { useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import AnimalListScreen from '../screen/AnimalListScreen';
-import AnimalDetailsScreen from '../screen/AnimalDetailsScreen';
-import AnimalFormScreen from '../screen/AnimalFormScreen';
+import AnimalListScreen from '../components/AnimalListScreen';
+import AnimalDetailsScreen from '../components/AnimalDetailsScreen';
+import AnimalFormScreen from '../components/AnimalFormScreen';
 
 const Stack = createNativeStackNavigator();
 

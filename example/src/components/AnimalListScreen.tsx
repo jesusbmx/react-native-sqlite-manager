@@ -4,7 +4,7 @@ import { Appbar } from 'react-native-paper'
 import { useOnEvent } from "react-native-event-manager";
 
 import Animal from "../model/Animal";
-import AnimalListItem from "../components/AnimalListItem";
+import AnimalListItem from "./AnimalListItem";
 
 function AnimalListScreen({navigation, route}: any): JSX.Element {
     const [items, setItems] = useState<Animal[]>([])

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { Appbar, HelperText, TextInput } from "react-native-paper";
 
@@ -18,7 +18,7 @@ function AnimalFormScreen({navigation, route}: any): JSX.Element {
     if (isEdit) {
       // get record and set form fields
       Animal.find<Animal>(id).then(row => {
-        form.setValues(row);
+        form.setValues(row!);
       })
       .catch((err) => console.debug(err));
     } 
@@ -57,9 +57,8 @@ function AnimalFormScreen({navigation, route}: any): JSX.Element {
   })
 
 
-  const form = useFormik<any>({
-    initialValues: { 
-    },
+  const form = useFormik<Animal>({
+    initialValues: new Animal({}),
     onSubmit: onSubmit,
     validationSchema: validationSchema,
     validateOnBlur: false,
