@@ -82,12 +82,12 @@ class QueryBuilder {
   /** 
    * INSERT
    * 
-   * @param {any} values
+   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
    * @returns insertId
    */
-  insert(values: any): Promise<number> {
-    var sql = QueryBuilder.buildInsert(this.tableName, values)
-    const params = Object.values(values)
+  insert(columnValues: any): Promise<number> {
+    var sql = QueryBuilder.buildInsert(this.tableName, columnValues)
+    const params = Object.values(columnValues)
     
     return this.db.executeSql(sql, params)
       .then(result => result.insertId ?? -1)
@@ -115,14 +115,14 @@ class QueryBuilder {
   /** 
    * UPDATE
    * 
-   * @param {any} values
+   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
    * @returns rowsAffected
    */
-  update(values: any): Promise<number> {
+  update(columnValues: any): Promise<number> {
     const sql = QueryBuilder.buildUpdate(
-      this.tableName, values, this._whereClause)
+      this.tableName, columnValues, this._whereClause)
 
-    const params = Object.values(values)
+    const params = Object.values(columnValues)
     const whereArgs = this._whereArgs ?? []
 
     return this.db.executeSql(sql, [...params, ...whereArgs])
@@ -142,7 +142,13 @@ class QueryBuilder {
       .then(result => result.rowsAffected)
   }
 
-  // SELECT
+  /**  
+   * Creates the "SELECT" sql statement
+   * 
+   * @param {string} tableName
+   * @param {QueryOptions} options
+   * @returns string
+   */
   static buildSelect(tableName: string, options: QueryOptions): string {
     const { columns = "*", where, order, limit, page } = options;
   
@@ -160,16 +166,32 @@ class QueryBuilder {
     return sqlParts.filter(Boolean).join(' ');
   }  
 
-  // Creates the "INSERT" sql statement
-  static buildInsert(tableName: string, object: any): string {
-    const keys = Object.keys(object)
+  /** 
+   * Creates the "INSERT" sql statement
+   * 
+   * @param {string} tableName
+   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
+   * @returns string
+   */
+  static buildInsert(tableName: string, columnValues: any): string {
+    const keys = Object.keys(columnValues)
     const columns = keys.join(', ')
     const values = keys.map(() => '?').join(', ')
 
     return `INSERT INTO ${tableName} (${columns}) VALUES (${values});`
   }
 
-  // Creates the "INSERT" sql statement
+  /** 
+   * Creates the "INSERT" sql statement
+   * 
+   * @param {string} tableName
+   * @param {string[]} fields ["Column 1", "Column 2"]
+   * @param {any[][]} data [
+   *  ["foo", "bar"],
+   *  ["abc", "def"]
+   * ]
+   * @returns string
+   */
   static buildInsertArray(tableName: string, keys: string[], data: any[][]): string {
     if (keys.length === 0) {
       throw new Error('fields is empty')
@@ -185,11 +207,18 @@ class QueryBuilder {
     return `INSERT INTO ${tableName} (${columns}) VALUES ${valuesArray};`;
   }
 
-  // Creates the "Update" sql statement
-  static buildUpdate(tableName: string, object: any, whereClause?: string): string {
+  /** 
+   * Creates the "Update" sql statement
+   * 
+   * @param {string} tableName
+   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
+   * @param {string} whereClause
+   * @returns string
+   */
+  static buildUpdate(tableName: string, columnValues: any, whereClause?: string): string {
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     //const { id, ...props } = object
-    const values = Object.keys(object)
+    const values = Object.keys(columnValues)
       .map(k => `${k} = ?`)
       .join(', ')
 
@@ -199,7 +228,13 @@ class QueryBuilder {
     return `UPDATE ${tableName} SET ${values}${wherePart};`;
   }
 
-  // Creates the "DELETE" sql statement
+  /**
+   * Creates the "DELETE" sql statement
+   * 
+   * @param {string} tableName
+   * @param {string} whereClause
+   * @returns string
+   */
   static buildDelete(tableName: string, whereClause?: string): string {
     const wherePart = whereClause && whereClause.trim().length > 0 
       ? ` WHERE ${whereClause}` : '';

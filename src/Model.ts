@@ -207,7 +207,7 @@ export default class Model {
    * @returns registro actualizado
    */
   static update<T extends Model>(
-    obj: any
+    obj: any | T
   ): Promise<T | undefined> {
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     const { [this.primaryKey]: id, ...props } = obj
@@ -248,35 +248,23 @@ export default class Model {
       .then(res => res.rowsAffected)
   }
 
-  /**
-   * ```js
-   * Animal.save({
-   *   id: 100,
-   *   age: 10,
-   *   color: '%Brown%',
-   * })
-   * ```
-   * @param obj
-   * @returns registro guardo o actualizado
-   */
   save<T extends Model>(): Promise<T | undefined> {
-    const model = (this.constructor as typeof Model);
+    const ModelClass = (this.constructor as typeof Model);
+    const currentInstance: any = this;
+    const id = currentInstance[ModelClass.primaryKey]
     
-    const obj: any = this;
-    const id = obj[model.primaryKey]
-
     if (id) {
-      return model.update<T>(obj)
+      return ModelClass.update<T>(currentInstance)
     } else {
-      return model.create<T>(obj)
+      return ModelClass.create<T>(currentInstance)
     }
   }
 
   destroy(): Promise<number> {
-    const model = (this.constructor as typeof Model);
+    const ModelClass = (this.constructor as typeof Model);
+    const currentInstance: any = this;
+    const id = currentInstance[ModelClass.primaryKey]
 
-    const obj: any = this;
-    const id = obj[model.primaryKey]
-    return model.destroy(id);
+    return ModelClass.destroy(id);
   }
 }
