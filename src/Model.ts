@@ -4,8 +4,8 @@ import QueryBuilder, { type QueryOptions } from './QueryBuilder';
 // Representa un modelos de base de datos
 export default class Model {
 
-  static get databasaName(): string {
-    throw new Error('databasaName not defined')
+  static get databaseName(): string {
+    throw new Error('databaseName not defined')
   }
 
   static get tableName(): string {
@@ -33,7 +33,7 @@ export default class Model {
     sql: string, 
     params: any[] = []
   ): Promise<ResultSet> {
-    const db = DB.get(this.databasaName);
+    const db = DB.get(this.databaseName);
     return db.executeSql(sql, params);
   }
 
@@ -41,7 +41,7 @@ export default class Model {
     sql: string, 
     params: any[] = []
   ): Promise<Payload> {
-    const db = DB.get(this.databasaName);
+    const db = DB.get(this.databaseName);
     return db.executeTransaction(sql, params);
   }
 
@@ -61,9 +61,8 @@ export default class Model {
     const sql = `
       SELECT * FROM ${this.tableName} WHERE ${column} ${op} ?
     `
-    const result = await this.executeSql(sql, [value]);
-    const row = result.rows[0];
-    return row ? (new (this as any)(row) as T) : undefined;
+    const { rows } = await this.executeSql(sql, [value]);
+    return rows.length ? new (this as any)(rows[0]) as T : undefined;
   }
 
   /**
@@ -89,9 +88,8 @@ export default class Model {
     const sql = `
       SELECT * FROM ${this.tableName} ORDER BY ROWID ASC LIMIT 1
     `
-    const result = await this.executeSql(sql);
-    const row = result.rows[0];
-    return row ? (new (this as any)(row) as T) : null;
+    const { rows } = await this.executeSql(sql);
+    return rows.length ? new (this as any)(rows[0]) as T : null;
   }
 
   /**
@@ -104,9 +102,8 @@ export default class Model {
     const sql = `
       SELECT * FROM ${this.tableName} ORDER BY ROWID DESC LIMIT 1
     `
-    const result = await this.executeSql(sql);
-    const row = result.rows[0];
-    return row ? (new (this as any)(row) as T) : null;
+    const { rows } = await this.executeSql(sql);
+    return rows.length ? new (this as any)(rows[0]) as T : null;
   }
     
   /**

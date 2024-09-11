@@ -189,7 +189,7 @@ export default class Animal extends Model {
     super(props)
   }
 
-  static get databasaName(): string {
+  static get databaseName(): string {
     return 'example.db'
   }
 
@@ -460,7 +460,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `setVersion(version: number): Promise<any>`
+### `setVersion(version: number): Promise<void>`
 
 - Sets the database version.
 
@@ -900,7 +900,7 @@ export default class Migration extends ItMigration {
 
 ### Static Properties
 
-#### `databasaName: string`
+#### `databaseName: string`
 
 - **Type:** `string`
 - **Description:** Name of the database. Must be defined in the model class.
@@ -935,26 +935,6 @@ export default class Migration extends ItMigration {
 ---
 
 ### Instance Methods
-
-#### `getProperties(): any`
-
-- Returns all properties of the model instance.
-
-  **Returns:**
-  
-  - `any`: Object containing all properties of the model instance.
-
----
-
-#### `setProperties(props: any): void`
-
-- Sets properties on the model instance.
-
-  **Parameters:**
-  
-  - `props` (any): Object containing properties to set on the model instance.
-
----
 
 #### `save(): Promise<any | undefined>`
 

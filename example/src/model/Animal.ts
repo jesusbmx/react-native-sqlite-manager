@@ -11,7 +11,7 @@ export default class Animal extends Model {
     super(props)
   }
 
-  static get databasaName(): string {
+  static get databaseName(): string {
     return 'example.db'
   }
 
