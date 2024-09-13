@@ -95,6 +95,15 @@ export default class Migration extends ItMigration {
   async onCreate(db: DB) {
     const schema = new Schema(db)
 
+    /*await db.executeSql(`
+      CREATE TABLE IF NOT EXISTS tb_animals (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+        name TEXT NOT NULL, 
+        color TEXT NOT NULL, 
+        age INTEGER NOT NULL, 
+        timestamp INTEGER NOT NULL
+      );
+    `)*/
     await schema.create("tb_animals", (table) => {
       table.increments("id")
       table.text("name")
