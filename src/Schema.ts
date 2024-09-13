@@ -19,19 +19,19 @@ export default class Schema {
      * @param closure 
      * @returns 
      */
-    async create(tableName: string, closure: (table: Table) => void): Promise<Table> {
-        const table = new Table(tableName)
-        await closure(table)
+    async create(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema> {
+        const tableSchema = new TableSchema(tableName)
+        await closure(tableSchema)
     
         // Create
-        await this.execSQL(table.toString())
-        table.isCreated = true
+        await this.execSQL(tableSchema.toString())
+        tableSchema.isCreated = true
     
-        for (const index of table.indexs) {
+        for (const index of tableSchema.indexs) {
           await this.execSQL(index.toString())
         }
     
-        return table
+        return tableSchema
     }
 
     /**
@@ -39,23 +39,23 @@ export default class Schema {
      * @param tableName 
      * @param closure 
      */
-    async alter(tableName: string, closure: (table: Table) => void): Promise<Table> {
-        const table = new Table(tableName)
-        await closure(table)
+    async alter(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema> {
+        const tableSchema = new TableSchema(tableName)
+        await closure(tableSchema)
     
         // Alter
-        const missingColumns = await this.getMissingColumns(table)
+        const missingColumns = await this.getMissingColumns(tableSchema)
         for (let i = 0; i < missingColumns.length; i++) {
           const col = missingColumns[i];
-          await this.execSQL(`ALTER TABLE ${table.name} ADD COLUMN ${col}`)
+          await this.execSQL(`ALTER TABLE ${tableSchema.name} ADD COLUMN ${col}`)
         }
     
-        for (const index of table.indexs) {
+        for (const index of tableSchema.indexs) {
           await this.execSQL(`DROP INDEX IF EXISTS ${index.name}`)
           await this.execSQL(index.toString())
         }
     
-        return table
+        return tableSchema
     }
 
     /**
@@ -64,12 +64,19 @@ export default class Schema {
      * @param closure 
      * @returns 
      */
-    async createOrAlter(tableName: string, closure: (table: Table) => void): Promise<Table> {
+    async createOrAlter(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema> {
       if (await this.hasTable(tableName)) {
         return await this.alter(tableName, closure);
       } else {
         return await this.create(tableName, closure);
       }
+    }
+
+    /** 
+     * Elimina la tabla 
+     */
+    async drop(tableName: string) {
+      await this.execSQL(`DROP TABLE IF EXISTS ${tableName}`)
     }
 
     /**
@@ -98,7 +105,7 @@ export default class Schema {
     /**
      * Obtiene un lista de columnas que ha un no exiten fisicamente en la tabla.
      */
-    async getMissingColumns(table: Table): Promise<Array<Column>> {
+    async getMissingColumns(table: TableSchema): Promise<Array<Column>> {
       const existingColumnNames = await this.getColumnNames(table.name);
       return table.columns.filter(col => !existingColumnNames.includes(col.name));
     }
@@ -107,7 +114,7 @@ export default class Schema {
 /*
  * CREATE TABLE IF NOT EXISTS tb_usuario ( ... )
  */
-export class Table {
+export class TableSchema {
 
     public name: string;
     public isCreated: boolean = false;

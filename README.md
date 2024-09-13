@@ -724,7 +724,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `create(tableName: string, closure: (table: Table) => void): Promise<Table>`
+### `create(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema>`
 
 - Creates a new table in the database.
 
@@ -735,11 +735,11 @@ export default class Migration extends ItMigration {
 
   **Returns:**
   
-  - `Promise<Table>`: Promise resolving to the created `Table` instance.
+  - `Promise<TableSchema>`: Promise resolving to the created `TableSchema` instance.
 
 ---
 
-### `alter(tableName: string, closure: (table: Table) => void): Promise<Table>`
+### `alter(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema>`
 
 - Alters an existing table by adding new columns that do not already exist.
 
@@ -750,11 +750,11 @@ export default class Migration extends ItMigration {
 
   **Returns:**
   
-  - `Promise<Table>`: Promise resolving to the altered `Table` instance.
+  - `Promise<TableSchema>`: Promise resolving to the altered `TableSchema` instance.
 
 ---
 
-### `createOrAlter(tableName: string, closure: (table: Table) => void): Promise<Table>`
+### `createOrAlter(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema>`
 
 - Create or modify the table
 
@@ -765,13 +765,13 @@ export default class Migration extends ItMigration {
 
   **Returns:**
   
-  - `Promise<Table>`: Promise resolving to the altered `Table` instance.
+  - `Promise<TableSchema>`: Promise resolving to the altered `TableSchema` instance.
 
-## `Table` Class
+## `TableSchema` Class
 
 ### `constructor(name: string)`
 
-- Initializes a new `Table` instance.
+- Initializes a new `TableSchema` instance.
 
   **Parameters:**
   
