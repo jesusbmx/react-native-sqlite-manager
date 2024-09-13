@@ -19,11 +19,7 @@ export default class Schema {
      * @param closure 
      * @returns 
      */
-    async create(
-      tableName: string, 
-      closure: (table: Table) => void
-    ): Promise<Table> {
-
+    async create(tableName: string, closure: (table: Table) => void): Promise<Table> {
         const table = new Table(tableName)
         await closure(table)
     
@@ -43,21 +39,15 @@ export default class Schema {
      * @param tableName 
      * @param closure 
      */
-    async alter(
-      tableName: string, 
-      closure: (table: Table) => void
-    ): Promise<Table> {
-      
+    async alter(tableName: string, closure: (table: Table) => void): Promise<Table> {
         const table = new Table(tableName)
         await closure(table)
     
         // Alter
-        const set = await this.getColumnsNotExist(table)
-        for (let i = 0; i < set.length; i++) {
-          const col = set[i];
-          await this.execSQL(`
-              ALTER TABLE ${table.name} ADD COLUMN ${col}
-          `)
+        const missingColumns = await this.getMissingColumns(table)
+        for (let i = 0; i < missingColumns.length; i++) {
+          const col = missingColumns[i];
+          await this.execSQL(`ALTER TABLE ${table.name} ADD COLUMN ${col}`)
         }
     
         for (const index of table.indexs) {
@@ -74,11 +64,7 @@ export default class Schema {
      * @param closure 
      * @returns 
      */
-    async createOrAlter(
-      tableName: string, 
-      closure: (table: Table) => void
-    ): Promise<Table> {
-
+    async createOrAlter(tableName: string, closure: (table: Table) => void): Promise<Table> {
       if (await this.hasTable(tableName)) {
         return await this.alter(tableName, closure);
       } else {
@@ -102,28 +88,19 @@ export default class Schema {
         return false;
     }
 
+    async getColumnNames(tableName: string): Promise<string[]> {
+      const { rows } = await this.execSQL(`
+          PRAGMA table_info(${tableName})
+      `)
+      return rows.map(row => row["name"])
+    }
+
     /**
      * Obtiene un lista de columnas que ha un no exiten fisicamente en la tabla.
      */
-    async getColumnsNotExist(
-      table: Table
-    ): Promise<Array<Column>> {
-        const { rows } = await this.execSQL(`
-            PRAGMA table_info(${table.name})
-        `)
-
-        const existingColumnNames: string[] = rows.map(it => it["name"])
-        const missingColumns: Array<Column> = [];
-
-        for (const col of table.columns) {
-          // Verifica si la columna no está presente
-          if (!existingColumnNames.includes(col.name)) {
-              // La columna no existe, añadirla al resultado
-              missingColumns.push(col);
-          }
-        }
-
-        return missingColumns
+    async getMissingColumns(table: Table): Promise<Array<Column>> {
+      const existingColumnNames = await this.getColumnNames(table.name);
+      return table.columns.filter(col => !existingColumnNames.includes(col.name));
     }
 }
 

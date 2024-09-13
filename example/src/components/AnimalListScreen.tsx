@@ -25,6 +25,10 @@ function AnimalListScreen({navigation, route}: any): JSX.Element {
     useOnEvent('Animal.onUpdate', updateList)
   
     const handleOnPressItem = (item: Animal) => {
+      Animal.find<Animal>(100).then(row => {
+        console.debug("row", row)
+      }).catch((err) => console.debug(err))
+
       item.print()
       navigation.navigate("AnimalDetailsScreen", {
         id: item.id,

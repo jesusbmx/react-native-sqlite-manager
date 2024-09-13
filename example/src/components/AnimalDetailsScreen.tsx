@@ -4,7 +4,7 @@ import { Appbar, List } from "react-native-paper";
 import { format as dateFormat } from 'date-fns';
 
 import Animal from "../model/Animal";
-import { notifyEvent } from "react-native-event-manager";
+import { notifyEvent, useOnEvent } from "react-native-event-manager";
 
 function AnimalDetailsScreen({navigation, route}: any): JSX.Element {
 
@@ -13,12 +13,18 @@ function AnimalDetailsScreen({navigation, route}: any): JSX.Element {
   const [animal, setAnimal] = useState<Animal>(new Animal())
 
   useEffect(() => {
+    loadAnimalDetails();
+  }, [id]);
+
+  const loadAnimalDetails = () => {
     Animal.find<Animal>(id).then(row => {
       setAnimal(row!);
     })
     .catch((err) => console.debug(err));
+  }
 
-  }, [id]);
+   // Cuando se modifica un registro
+   useOnEvent('Animal.onUpdate', loadAnimalDetails)
 
   const handleDelete = () => {
     Animal.destroy(id).then(() => {

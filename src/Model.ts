@@ -23,6 +23,16 @@ export default class Model {
 
   //constructor(public id: number, public name: string) {}
 
+  // Función que convierte valores de la base de datos a propiedades de la entidad
+  static databaseToModel(databaseValues: any): Model {
+    return new (this as any)(databaseValues);
+  }
+
+  // Función que convierte un modelo a valores que pueden ser insertados en la base de datos
+  static modelToDatabase(model: Model): any {
+    return Object.assign({}, model);
+  }
+
   /**
    * ```js
    * Animal.executeSql("SELECT * FROM tb_animal WHERE id = ?", [7])
@@ -62,7 +72,7 @@ export default class Model {
       SELECT * FROM ${this.tableName} WHERE ${column} ${op} ?
     `
     const { rows } = await this.executeSql(sql, [value]);
-    return rows.length ? new (this as any)(rows[0]) as T : undefined;
+    return rows.length ? this.databaseToModel(rows[0]) as T : undefined;
   }
 
   /**
@@ -89,7 +99,7 @@ export default class Model {
       SELECT * FROM ${this.tableName} ORDER BY ROWID ASC LIMIT 1
     `
     const { rows } = await this.executeSql(sql);
-    return rows.length ? new (this as any)(rows[0]) as T : null;
+    return rows.length ? this.databaseToModel(rows[0]) as T : null;
   }
 
   /**
@@ -103,7 +113,7 @@ export default class Model {
       SELECT * FROM ${this.tableName} ORDER BY ROWID DESC LIMIT 1
     `
     const { rows } = await this.executeSql(sql);
-    return rows.length ? new (this as any)(rows[0]) as T : null;
+    return rows.length ? this.databaseToModel(rows[0]) as T : null;
   }
     
   /**
@@ -135,7 +145,7 @@ export default class Model {
     const list: T[] = [];
     for (let i = 0; i < result.rows.length; i++) {
       const row = result.rows.item(i);
-      list.push(new (this as any)(row) as T);
+      list.push(this.databaseToModel(row) as T);
     }
     return list;
   }
@@ -163,7 +173,7 @@ export default class Model {
     const list: T[] = [];
     for (let i = 0; i < result.rows.length; i++) {
       const row = result.rows.item(i);
-      list.push(new (this as any)(row) as T);
+      list.push(this.databaseToModel(row) as T);
     }
     return list;
   }
@@ -179,10 +189,13 @@ export default class Model {
    * @returns registro creado
    */
   static async create<T extends Model>(
-    obj: any
+    obj: any | T
   ): Promise<T | undefined> {
-    var sql = QueryBuilder.buildInsert(this.tableName, obj)
-    const params = Object.values(obj)
+    const modelInstance = obj instanceof this ? obj : new (this as any)(obj);
+
+    const databaseValues = this.modelToDatabase(modelInstance);
+    var sql = QueryBuilder.buildInsert(this.tableName, databaseValues);
+    const params = Object.values(databaseValues);
     
     const result = await this.executeSql(sql, params);
     return await this.find<T>(result.insertId);
@@ -202,13 +215,16 @@ export default class Model {
   static async update<T extends Model>(
     obj: any | T
   ): Promise<T | undefined> {
+    const modelInstance = obj instanceof this ? obj : new (this as any)(obj);
+    const databaseValues = this.modelToDatabase(modelInstance);
+
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
-    const { [this.primaryKey]: id, ...props } = obj
+    const { [this.primaryKey]: id, ...props } = databaseValues
 
     const sql = QueryBuilder.buildUpdate(
-      this.tableName, props, `${this.primaryKey} = ?`)
-
-    const params = Object.values(props)
+      this.tableName, props, `${this.primaryKey} = ?`
+    );
+    const params = Object.values(props);
 
     await this.executeSql(sql, [...params, id]);
     return await this.find<T>(id);

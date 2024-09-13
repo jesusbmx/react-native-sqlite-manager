@@ -603,13 +603,13 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `insert(values: Record<string, any>): Promise<ResultSet>`
+### `insert(columnValues: Record<string, any>): Promise<ResultSet>`
 
 - Executes the INSERT query and returns a promise resolving to the result.
 
   **Parameters:**
   
-  - `values` (Record<string, any>): Object containing column-value pairs to insert.
+  - `columnValues` (Record<string, any>): Object containing column-value pairs to insert.
 
   **Returns:**
   
@@ -617,13 +617,13 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `update(values: Record<string, any>): Promise<ResultSet>`
+### `update(columnValues: Record<string, any>): Promise<ResultSet>`
 
 - Executes the UPDATE query and returns a promise resolving to the result.
 
   **Parameters:**
   
-  - `values` (Record<string, any>): Object containing column-value pairs to update.
+  - `columnValues` (Record<string, any>): Object containing column-value pairs to update.
 
   **Returns:**
   
@@ -1057,7 +1057,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-#### `create(obj: any): Promise<any | undefined>`
+#### `create(obj: any | T): Promise<any | undefined>`
 
 - Creates a new record in the table.
 
@@ -1071,7 +1071,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-#### `update(obj: any): Promise<any | undefined>`
+#### `update(obj: any | T): Promise<any | undefined>`
 
 - Updates a record in the table.
 
@@ -1097,9 +1097,33 @@ export default class Migration extends ItMigration {
   
   - `Promise<number>`: Promise resolving to the number of affected rows.
 
+---
 
+#### `databaseToModel(databaseValues: any): Model`
 
+- Converts database values to a model instance.
 
+  **Parameters:**
+        
+  - `databaseValues` (any): Values from the database to convert.
+
+  **Returns:**
+        
+  - `Model`: Model instance created from the database values.
+
+---
+
+#### `modelToDatabase(model: Model): any`
+
+- Converts a model instance to values that can be inserted into the database.
+
+  **Parameters:**
+    
+  - `model` (Model): The model instance to convert.
+
+  **Returns:**
+
+  - `any`: Database-compatible values converted from the model instance.
 
 
 
