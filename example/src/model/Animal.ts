@@ -35,14 +35,14 @@ export default class Animal extends Model {
     });
   }
 
-  static modelToDatabase(model: Animal): any {
-    console.debug("Animal.modelToDatabase", model)
+  static modelToDatabase(props: any): any {
+    console.debug("Animal.modelToDatabase", props)
     return {
-      id: model.id,
-      name: model.name,
-      color: model.color,
-      age: model.age,
-      timestamp: model.timestamp,
+      id: props.id,
+      name: props.name,
+      color: props.color,
+      age: props.age,
+      timestamp: props.timestamp,
     };
   }*/
 

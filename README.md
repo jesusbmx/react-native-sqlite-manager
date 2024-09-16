@@ -479,7 +479,7 @@ export default class Migration extends ItMigration {
 
   **Returns:**
   
-  - `Promise<any>`: Promise resolving to information about the operation.
+  - `Promise<any>`: Promise.
 
 ---
 
@@ -602,23 +602,38 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `get(): Promise<ResultSet>`
+### `get(): Promise<any[]>`
 
 - Executes the SELECT query and returns a promise resolving to the result.
 
   **Returns:**
   
-  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+  - `Promise<any[]>`: Promise resolving to an array of records matching the query.
 
 ---
 
-### `insert(columnValues: Record<string, any>): Promise<ResultSet>`
+### `insert(record: Record<string, any>): Promise<number>`
 
 - Executes the INSERT query and returns a promise resolving to the result.
 
   **Parameters:**
   
-  - `columnValues` (Record<string, any>): Object containing column-value pairs to insert.
+  - `record` (Record<string, any>): Object containing column-value pairs to insert.
+
+  **Returns:**
+  
+  - `Promise<number>`: Promise resolving to the ID of the last inserted row.
+
+---
+
+### `insertArray(fields: string[], records: any[][]): Promise<ResultSet>`
+
+- Executes the INSERT query and returns a promise resolving to the result.
+
+  **Parameters:**
+  
+  - `fields` (string[]): fields to insert.
+  - `records` (any[][]): records to insert.
 
   **Returns:**
   
@@ -626,27 +641,27 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `update(columnValues: Record<string, any>): Promise<ResultSet>`
+### `update(record: Record<string, any>): Promise<number>`
 
 - Executes the UPDATE query and returns a promise resolving to the result.
 
   **Parameters:**
   
-  - `columnValues` (Record<string, any>): Object containing column-value pairs to update.
+  - `record` (Record<string, any>): Object containing column-value pairs to update.
 
   **Returns:**
   
-  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+  - `Promise<number>`: Promise resolving to the number of rows affected by the query.
 
 ---
 
-### `delete(): Promise<ResultSet>`
+### `delete(): Promise<number>`
 
 - Executes the DELETE query and returns a promise resolving to the result.
 
   **Returns:**
   
-  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+  - `Promise<number>`: Promise resolving to the number of rows affected by the query.
 
 ---
 
@@ -1066,7 +1081,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-#### `create(obj: any | T): Promise<any | undefined>`
+#### `create(obj: any): Promise<any | undefined>`
 
 - Creates a new record in the table.
 
@@ -1080,7 +1095,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-#### `update(obj: any | T): Promise<any | undefined>`
+#### `update(obj: any): Promise<any | undefined>`
 
 - Updates a record in the table.
 
@@ -1122,13 +1137,13 @@ export default class Migration extends ItMigration {
 
 ---
 
-#### `modelToDatabase(model: Model): any`
+#### `modelToDatabase(props: any): any`
 
 - Converts a model instance to values that can be inserted into the database.
 
   **Parameters:**
     
-  - `model` (Model): The model instance to convert.
+  - `props` (any): The model properties.
 
   **Returns:**
 

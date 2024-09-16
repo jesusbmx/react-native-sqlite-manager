@@ -29,8 +29,8 @@ export default class Model {
   }
 
   // Función que convierte un modelo a valores que pueden ser insertados en la base de datos
-  static modelToDatabase(model: Model): any {
-    return Object.assign({}, model);
+  static modelToDatabase(props: any): any {
+    return Object.assign({}, props);
   }
 
   /**
@@ -185,15 +185,13 @@ export default class Model {
    *   color: '%Brown%',
    * })
    * ```
-   * @param obj
+   * @param record
    * @returns registro creado
    */
   static async create<T extends Model>(
-    obj: any | T
+    record: any
   ): Promise<T | undefined> {
-    const modelInstance = obj instanceof this ? obj : new (this as any)(obj);
-
-    const databaseValues = this.modelToDatabase(modelInstance);
+    const databaseValues = this.modelToDatabase(record);
     var sql = QueryBuilder.buildInsert(this.tableName, databaseValues);
     const params = Object.values(databaseValues);
     
@@ -209,14 +207,13 @@ export default class Model {
    *   color: '%Brown%',
    * })
    * ```
-   * @param obj
+   * @param record
    * @returns registro actualizado
    */
   static async update<T extends Model>(
-    obj: any | T
+    record: any
   ): Promise<T | undefined> {
-    const modelInstance = obj instanceof this ? obj : new (this as any)(obj);
-    const databaseValues = this.modelToDatabase(modelInstance);
+    const databaseValues = this.modelToDatabase(record);
 
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     const { [this.primaryKey]: id, ...props } = databaseValues

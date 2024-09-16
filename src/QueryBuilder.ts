@@ -82,12 +82,12 @@ class QueryBuilder {
   /** 
    * INSERT
    * 
-   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
+   * @param {any} record { "Column 1": "foo", "Column 2": "bar" }
    * @returns insertId
    */
-  async insert(columnValues: any): Promise<number> {
-    var sql = QueryBuilder.buildInsert(this.tableName, columnValues)
-    const params = Object.values(columnValues)
+  async insert(record: any): Promise<number> {
+    var sql = QueryBuilder.buildInsert(this.tableName, record)
+    const params = Object.values(record)
     
     const result = await this.db.executeSql(sql, params);
     return result.insertId ?? -1;
@@ -97,32 +97,32 @@ class QueryBuilder {
    * INSERT
    * 
    * @param {string[]} fields ["Column 1", "Column 2"]
-   * @param {any[][]} data [
+   * @param {any[][]} records [
    *  ["foo", "bar"],
    *  ["abc", "def"]
    * ]
    * @returns result
    */
-  insertArray(fields: string[], data: any[][]): Promise<ResultSet> {
+  insertArray(fields: string[], records: any[][]): Promise<ResultSet> {
     const sql = QueryBuilder.buildInsertArray(
-      this.tableName, fields, data)
+      this.tableName, fields, records)
     // crea una nueva matriz con todos los elementos de las submatrices 
     // concatenados recursivamente hasta la profundidad especificada
-    const params: any[] = data.flat()
+    const params: any[] = records.flat()
     return this.db.executeSql(sql, params)
   }
 
   /** 
    * UPDATE
    * 
-   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
+   * @param {any} record { "Column 1": "foo", "Column 2": "bar" }
    * @returns rowsAffected
    */
-  async update(columnValues: any): Promise<number> {
+  async update(record: any): Promise<number> {
     const sql = QueryBuilder.buildUpdate(
-      this.tableName, columnValues, this._whereClause)
+      this.tableName, record, this._whereClause)
 
-    const params = Object.values(columnValues)
+    const params = Object.values(record)
     const whereArgs = this._whereArgs ?? []
 
     const result = await this.db.executeSql(sql, [...params, ...whereArgs])
@@ -170,11 +170,11 @@ class QueryBuilder {
    * Creates the "INSERT" sql statement
    * 
    * @param {string} tableName
-   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
+   * @param {any} record { "Column 1": "foo", "Column 2": "bar" }
    * @returns string
    */
-  static buildInsert(tableName: string, columnValues: any): string {
-    const keys = Object.keys(columnValues)
+  static buildInsert(tableName: string, record: any): string {
+    const keys = Object.keys(record)
     const columns = keys.join(', ')
     const values = keys.map(() => '?').join(', ')
 
@@ -211,14 +211,14 @@ class QueryBuilder {
    * Creates the "Update" sql statement
    * 
    * @param {string} tableName
-   * @param {any} columnValues { "Column 1": "foo", "Column 2": "bar" }
+   * @param {any} record { "Column 1": "foo", "Column 2": "bar" }
    * @param {string} whereClause
    * @returns string
    */
-  static buildUpdate(tableName: string, columnValues: any, whereClause?: string): string {
+  static buildUpdate(tableName: string, record: any, whereClause?: string): string {
     // Extrae el valor de "id" y crea un nuevo objeto sin ese dato
     //const { id, ...props } = object
-    const values = Object.keys(columnValues)
+    const values = Object.keys(record)
       .map(k => `${k} = ?`)
       .join(', ')
 
