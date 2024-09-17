@@ -1,29 +1,16 @@
+import SQLite from 'react-native-sqlite-storage';
 import type ItMigration from "./ItMigration"
 import QueryBuilder from "./QueryBuilder"
 
-//npm install --save-dev @types/react-native-sqlite-storage
-const { openDatabase } = require('react-native-sqlite-storage');
-
-
-export type SQLiteDatabase = {
-  close(): () => void
-  transaction: (tx: any) => void
-}
-
-export type Payload = {
-  rows: {
-    item(i: number): any;
-    raw(): any[];
-    length: number;
-  },
-  rowsAffected: number;
-  insertId?: number;
+export type SqlRequest = {
+  sql: string;
+  params?: any[];
 }
 
 /**
  * Resultado de los querys
  */
-export type ResultSet = {
+export type QueryResult = {
   insertId?: number;
   rowsAffected: number;
   rows: any[];
@@ -36,7 +23,7 @@ export default class DB {
   private static _instances = new Map<string, DB>();
 
   public name: string
-  public sqlite?: SQLiteDatabase | null
+  public sqlite?: SQLite.SQLiteDatabase | null
 
   /**
    * @param {string} name nombre de la db
@@ -74,12 +61,12 @@ export default class DB {
 
   /**
    * Abre la base de datos
-   * @returns {SQLiteDatabase}
+   * @returns {SQLite.SQLiteDatabase}
    */
-  async open(): Promise<SQLiteDatabase> {
+  async open(): Promise<SQLite.SQLiteDatabase> {
     if (!this.sqlite) {
       //console.debug("DB.open", this.name)
-      this.sqlite = await openDatabase({ "name": this.name });
+      this.sqlite = await SQLite.openDatabase({ "name": this.name });
     }
     return this.sqlite!;
   }
@@ -95,27 +82,23 @@ export default class DB {
   }
 
   /**
-   * Ejecuta sentecias sql.
+   * Ejecuta múltiples sentencias SQL en una transacción.
    * 
-   * @param {string[]} sql sentencias
-   * @param {any[][]} params parametross
+   * @param {SqlRequest[]} requests sentencias
    * 
-   * @returns {Payload[]} resultados
+   * @returns {SQLite.ResultSet[]} resultados
    */
-  async executeBulkTransaction(
-    sqls: string[], 
-    params: any[][]
-  ): Promise<Payload[]> {
+  async executeTransaction(requests: SqlRequest[]): Promise<SQLite.ResultSet[]> {
     const db = await this.open(); // Asegurar que la base de datos está abierta.
 
-    return new Promise<Payload[]>((txResolve, txReject) => {
-      db.transaction((tx: any /*Transaction*/) => {
+    return new Promise<SQLite.ResultSet[]>((txResolve, txReject) => {
+      db.transaction((tx: SQLite.Transaction) => {
 
-        Promise.all(sqls.map((sql, index) => {
+        Promise.all(requests.map((request) => {
 
-          return new Promise<Payload>((sqlResolve, sqlReject) => {
-            tx.executeSql(sql, params[index], 
-              (_tx: any, result: Payload) => { sqlResolve(result) },
+          return new Promise<SQLite.ResultSet>((sqlResolve, sqlReject) => {
+            tx.executeSql(request.sql, request.params, 
+              (_tx: any, result: SQLite.ResultSet) => { sqlResolve(result) },
               (error: any) => { sqlReject(error) }
             )
           }) // Singel Promise 
@@ -131,70 +114,45 @@ export default class DB {
    * @param {string} sql sentencia
    * @param {any[]} params parametros
    * 
-   * @returns {Payload} resultado
+   * @returns {SQLite.ResultSet} resultado
    */
-  async executeTransaction(
+  async executeSingleQuery(
     sql: string, 
     params: any[] = []
-  ): Promise<Payload> {
-    return this.executeBulkTransaction([sql], [params])
-      .then(res => res[0] as Payload)
-      .catch(error => { throw error })
+  ): Promise<SQLite.ResultSet> {
+    const results = await this.executeTransaction([{ sql, params }]);
+    const result = results[0];
+    if (!result) {
+      throw new Error('No result returned from transaction.');
+    }
+    return result;
   }
 
-
-  /**
-   * Ejecuta sentecias sql.
-   * 
-   * @param {string[]} sql sentencias
-   * @param {any[][]} params parametross
-   * 
-   * @returns {ResultSet[]} resultados
-   */
-  async executeBulkSql(
-    sqls: string[], 
-    params: any[][]
-  ): Promise<ResultSet[]> {
-    const db = await this.open(); // Asegurar que la base de datos está abierta.
-
-    return new Promise<ResultSet[]>((txResolve, txReject) => {
-      db.transaction((tx: any /*Transaction*/) => {
-
-        Promise.all(sqls.map((sql, index) => {
-
-          return new Promise<ResultSet>((sqlResolve, sqlReject) => {
-            tx.executeSql(sql, params[index], 
-              (_tx: any, result: Payload) => {
-                sqlResolve({ 
-                  rows: result.rows.raw(), 
-                  insertId: result.insertId,
-                  rowsAffected: result.rowsAffected
-                })
-              },
-              (error: any) => { sqlReject(error) }
-            )
-          }) // Singel Promise 
-
-        })).then(txResolve).catch(txReject) // Promise all
-      }) // transaction
-    }) // Promise transaction
-  }
-
-  /**
-   * Ejecuta sentecias sql.
-   * 
-   * @param {string} sql sentencia
-   * @param {any[]} params parametros
-   * 
-   * @returns {ResultSet} resultado
-   */
+ /**
+  * Ejecuta una sentencia SQL con los parámetros dados y devuelve el resultado.
+  * 
+  * @param {string} sql La sentencia SQL a ejecutar.
+  * @param {any[]} params Los parámetros para la sentencia SQL.
+  * 
+  * @returns {Promise<QueryResult>} El resultado de la consulta en forma de QueryResult.
+  */
    async executeSql(
     sql: string, 
     params: any[] = []
-  ): Promise<ResultSet> {
-    return this.executeBulkSql([sql], [params])
-      .then(res => res[0] as ResultSet)
-      .catch(error => { throw error })
+  ): Promise<QueryResult> {
+  
+    const results = await this.executeTransaction([{ sql, params }]);
+    const result = results[0];
+
+    if (!result) {
+      throw new Error('No result returned from SQL execution.');
+    }
+
+    return {
+      rows: result.rows.raw(), 
+      insertId: result.insertId ?? null,
+      rowsAffected: result.rowsAffected
+    };
   }
 
   /**

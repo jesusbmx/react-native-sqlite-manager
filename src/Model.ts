@@ -1,4 +1,5 @@
-import DB, { type Payload, type ResultSet } from './DB';
+import SQLite from 'react-native-sqlite-storage';
+import DB, { type QueryResult } from './DB';
 import QueryBuilder, { type QueryOptions } from './QueryBuilder';
 
 // Representa un modelos de base de datos
@@ -37,22 +38,22 @@ export default class Model {
    * ```js
    * Animal.executeSql("SELECT * FROM tb_animal WHERE id = ?", [7])
    * ```
-   * @return {ResultSet} result
+   * @return {QueryResult} result
    */
   static executeSql(
     sql: string, 
     params: any[] = []
-  ): Promise<ResultSet> {
+  ): Promise<QueryResult> {
     const db = DB.get(this.databaseName);
     return db.executeSql(sql, params);
   }
 
-  static executeTransaction(
+  static executeSingleQuery(
     sql: string, 
     params: any[] = []
-  ): Promise<Payload> {
+  ): Promise<SQLite.ResultSet> {
     const db = DB.get(this.databaseName);
-    return db.executeTransaction(sql, params);
+    return db.executeSingleQuery(sql, params);
   }
 
   /**
@@ -141,7 +142,7 @@ export default class Model {
     const sql = `
       SELECT * FROM ${this.tableName}
     `
-    const result = await this.executeTransaction(sql);
+    const result = await this.executeSingleQuery(sql);
     const list: T[] = [];
     for (let i = 0; i < result.rows.length; i++) {
       const row = result.rows.item(i);
@@ -169,7 +170,7 @@ export default class Model {
    */
   static async query<T extends Model>(options: QueryOptions = {}): Promise<any[]> {
     const sql = QueryBuilder.buildSelect(this.tableName, options);
-    const result = await this.executeTransaction(sql, options.where?.args);
+    const result = await this.executeSingleQuery(sql, options.where?.args);
     const list: T[] = [];
     for (let i = 0; i < result.rows.length; i++) {
       const row = result.rows.item(i);

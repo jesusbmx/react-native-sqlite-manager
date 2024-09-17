@@ -1,4 +1,4 @@
-import DB, { type ResultSet } from './DB';
+import DB, { type QueryResult } from './DB';
 
 export default class Schema {
 
@@ -8,7 +8,7 @@ export default class Schema {
         this.db = db;
     }
 
-    execSQL(sql: string): Promise<ResultSet> {
+    execSQL(sql: string): Promise<QueryResult> {
       console.debug(sql)
       return this.db.executeSql(sql)
     }

@@ -1,4 +1,4 @@
-import DB, { type ResultSet } from "./DB"
+import DB, { type QueryResult } from "./DB"
 
 // Opciones para el QUERY
 export type QueryOptions = {
@@ -97,18 +97,18 @@ class QueryBuilder {
    * INSERT
    * 
    * @param {string[]} fields ["Column 1", "Column 2"]
-   * @param {any[][]} records [
+   * @param {any[][]} data [
    *  ["foo", "bar"],
    *  ["abc", "def"]
    * ]
    * @returns result
    */
-  insertArray(fields: string[], records: any[][]): Promise<ResultSet> {
+  insertArray(fields: string[], data: any[][]): Promise<QueryResult> {
     const sql = QueryBuilder.buildInsertArray(
-      this.tableName, fields, records)
+      this.tableName, fields, data)
     // crea una nueva matriz con todos los elementos de las submatrices 
     // concatenados recursivamente hasta la profundidad especificada
-    const params: any[] = records.flat()
+    const params: any[] = data.flat()
     return this.db.executeSql(sql, params)
   }
 

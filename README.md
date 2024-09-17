@@ -7,6 +7,9 @@ Tool that simplifies management and access to SQLite databases in React Native a
 #### Dependencies
 ```sh
 npm install react-native-sqlite-storage
+
+## Optional
+npm install @types/react-native-sqlite-storage --save-dev
 ```
 
 ## Installation
@@ -429,7 +432,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `executeSql(sql: string, params: any[] = []): Promise<ResultSet>`
+### `executeSql(sql: string, params: any[] = []): Promise<QueryResult>`
 
 - Executes an SQL statement and returns a promise resolving to the result.
 
@@ -440,22 +443,21 @@ export default class Migration extends ItMigration {
 
   **Returns:**
   
-  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+  - `Promise<QueryResult>`: Promise resolving to the result of the query.
 
 ---
 
-### `executeBulkSql(sqls: string[], params: any[][]): Promise<ResultSet[]>`
+### `executeTransaction(requests: SqlRequest[]): Promise<SQLite.ResultSet[]>`
 
 - Executes a series of SQL statements in bulk and returns a promise resolving to an array of results.
 
   **Parameters:**
   
-  - `sqls` (string[]): Array of SQL statements.
-  - `params` (any[][]): Array of arrays of parameters for the SQL statements.
+  - `requests` (SqlRequest[]): SQL statements to be executed in the transaction.
 
   **Returns:**
   
-  - `Promise<ResultSet[]>`: Promise resolving to an array of results of the queries.
+  - `Promise<SQLite.ResultSet[]>`: Promise resolving to an array of results of the queries.
 
 ---
 
@@ -509,7 +511,7 @@ export default class Migration extends ItMigration {
 ---
 
 
-## `ResultSet` Type
+## `QueryResult` Type
 
 ### `insertId?: number`
 
@@ -626,18 +628,18 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `insertArray(fields: string[], records: any[][]): Promise<ResultSet>`
+### `insertArray(fields: string[], data: any[][]): Promise<QueryResult>`
 
 - Executes the INSERT query and returns a promise resolving to the result.
 
   **Parameters:**
   
   - `fields` (string[]): fields to insert.
-  - `records` (any[][]): records to insert.
+  - `data` (any[][]): records to insert.
 
   **Returns:**
   
-  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+  - `Promise<QueryResult>`: Promise resolving to the result of the query.
 
 ---
 
@@ -725,7 +727,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `execSQL(sql: string): Promise<ResultSet>`
+### `execSQL(sql: string): Promise<QueryResult>`
 
 - Executes an SQL statement and returns a promise resolving to the result.
 
@@ -735,7 +737,7 @@ export default class Migration extends ItMigration {
 
   **Returns:**
   
-  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+  - `Promise<QueryResult>`: Promise resolving to the result of the query.
 
 ---
 
@@ -982,7 +984,7 @@ export default class Migration extends ItMigration {
 
 ### Static Methods
 
-#### `executeSql(sql: string, params: any[] = []): Promise<ResultSet>`
+#### `executeSql(sql: string, params: any[] = []): Promise<QueryResult>`
 
 - Executes a raw SQL query on the database.
 
@@ -993,7 +995,7 @@ export default class Migration extends ItMigration {
 
   **Returns:**
   
-  - `Promise<ResultSet>`: Promise resolving to the result of the query.
+  - `Promise<QueryResult>`: Promise resolving to the result of the query.
 
 ---
 
