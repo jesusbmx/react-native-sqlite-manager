@@ -367,7 +367,7 @@ export default class Migration extends ItMigration {
    * @param db
    */
   async onCreate(db: DB) {
-     const schema = new Schema(db)
+    const schema = new Schema(db)
 
     await schema.create("tb_animals", (table) => {
       table.increments("id")
@@ -386,12 +386,19 @@ export default class Migration extends ItMigration {
    * @param {number} newVersion
    */
   async onUpdate(db: DB, oldVersion: number, newVersion: number) {
-    if (oldVersion != newVersion) {
-      // update version db
-      const schema = new Schema(db)
+    const schema = new Schema(db)
+
+    // Migration from version 1 to version 2
+    if (oldVersion < 2 && newVersion >= 2) {
+      // await db.executeSql(`ALTER TABLE tb_animals ADD COLUMN description TEXT DEFAULT '';`);
       await schema.alter("tb_animals", (table) => {
         table.text("description").defaultVal("") // Added in version 2
       });
+    }
+
+    // Migration from version 2 to version 3
+    if (oldVersion < 3 && newVersion >= 3) {
+      // ...
     }
   }
 }
