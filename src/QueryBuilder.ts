@@ -87,9 +87,9 @@ class QueryBuilder {
    */
   async insert(record: any): Promise<number> {
     var sql = QueryBuilder.buildInsert(this.tableName, record)
-    const params = Object.values(record)
+    const args = Object.values(record)
     
-    const result = await this.db.executeSql(sql, params);
+    const result = await this.db.executeSql(sql, args);
     return result.insertId ?? -1;
   }
 
@@ -108,8 +108,8 @@ class QueryBuilder {
       this.tableName, fields, data)
     // crea una nueva matriz con todos los elementos de las submatrices 
     // concatenados recursivamente hasta la profundidad especificada
-    const params: any[] = data.flat()
-    return this.db.executeSql(sql, params)
+    const args: any[] = data.flat()
+    return this.db.executeSql(sql, args)
   }
 
   /** 
@@ -122,10 +122,10 @@ class QueryBuilder {
     const sql = QueryBuilder.buildUpdate(
       this.tableName, record, this._whereClause)
 
-    const params = Object.values(record)
+    const args = Object.values(record)
     const whereArgs = this._whereArgs ?? []
 
-    const result = await this.db.executeSql(sql, [...params, ...whereArgs])
+    const result = await this.db.executeSql(sql, [...args, ...whereArgs])
     return result.rowsAffected;
   }
 

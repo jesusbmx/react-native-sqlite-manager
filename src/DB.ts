@@ -4,7 +4,7 @@ import QueryBuilder from "./QueryBuilder"
 
 export type SqlRequest = {
   sql: string;
-  params?: any[];
+  args?: any[];
 }
 
 /**
@@ -84,43 +84,64 @@ export default class DB {
   /**
    * Ejecuta múltiples sentencias SQL en una transacción.
    * 
+   * ```js
+   * db.executeTransaction([
+   *   { 
+   *     sql: "INSERT INTO users (id, name) VALUES (?, ?)", 
+   *     args: [1, "John"] 
+   *   },
+   *   {
+   *     sql: "INSERT INTO users (id, name) VALUES (?, ?)",
+   *     args: [2, "Jane"]
+   *   },
+   * ])
+   * ```
+   * 
    * @param {SqlRequest[]} requests sentencias
    * 
    * @returns {SQLite.ResultSet[]} resultados
    */
-  async executeTransaction(requests: SqlRequest[]): Promise<SQLite.ResultSet[]> {
+  async executeTransaction(...requests: SqlRequest[]): Promise<SQLite.ResultSet[]> {
     const db = await this.open(); // Asegurar que la base de datos está abierta.
 
-    return new Promise<SQLite.ResultSet[]>((txResolve, txReject) => {
-      db.transaction((tx: SQLite.Transaction) => {
-
-        Promise.all(requests.map((request) => {
-
-          return new Promise<SQLite.ResultSet>((sqlResolve, sqlReject) => {
-            tx.executeSql(request.sql, request.params, 
+    return new Promise<SQLite.ResultSet[]>((txResolve, txReject) => 
+    {
+      db.transaction((tx: SQLite.Transaction) => 
+      {
+        Promise.all(requests.map((request) => 
+        {
+          return new Promise<SQLite.ResultSet>((sqlResolve, sqlReject) => 
+          {
+            tx.executeSql(request.sql, request.args, 
               (_tx: any, result: SQLite.ResultSet) => { sqlResolve(result) },
               (error: any) => { sqlReject(error) }
             )
-          }) // Singel Promise 
-
-        })).then(txResolve).catch(txReject) // Promise all
-      }) // transaction
-    }) // Promise transaction
+          })
+        }))
+        .then(txResolve)
+        .catch(txReject)
+      })
+    })
   }
 
   /**
    * Ejecuta sentecias sql.
    * 
+   * ```js
+   * db.rawQuery("SELECT * FROM users WHERE id = ?", [1])
+   * db.rawQuery("INSERT INTO users (id, name) VALUES (?, ?)", [1, "John"])
+   * ```
+   * 
    * @param {string} sql sentencia
-   * @param {any[]} params parametros
+   * @param {any[]} args parametros
    * 
    * @returns {SQLite.ResultSet} resultado
    */
-  async executeSingleQuery(
+  async rawQuery(
     sql: string, 
-    params: any[] = []
+    args: any[] = []
   ): Promise<SQLite.ResultSet> {
-    const results = await this.executeTransaction([{ sql, params }]);
+    const results = await this.executeTransaction({ sql, args });
     const result = results[0];
     if (!result) {
       throw new Error('No result returned from transaction.');
@@ -131,17 +152,22 @@ export default class DB {
  /**
   * Ejecuta una sentencia SQL con los parámetros dados y devuelve el resultado.
   * 
+  * ```js
+  * db.executeSql("SELECT * FROM users WHERE id = ?", [1])
+  * db.executeSql("INSERT INTO users (id, name) VALUES (?, ?)", [1, "John"])
+  * ```
+  * 
   * @param {string} sql La sentencia SQL a ejecutar.
-  * @param {any[]} params Los parámetros para la sentencia SQL.
+  * @param {any[]} args Los parámetros para la sentencia SQL.
   * 
   * @returns {Promise<QueryResult>} El resultado de la consulta en forma de QueryResult.
   */
    async executeSql(
     sql: string, 
-    params: any[] = []
+    args: any[] = []
   ): Promise<QueryResult> {
   
-    const results = await this.executeTransaction([{ sql, params }]);
+    const results = await this.executeTransaction({ sql, args });
     const result = results[0];
 
     if (!result) {

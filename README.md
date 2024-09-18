@@ -505,14 +505,14 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `executeSql(sql: string, params: any[] = []): Promise<QueryResult>`
+### `executeSql(sql: string, args: any[] = []): Promise<QueryResult>`
 
 - Executes an SQL statement and returns a promise resolving to the result.
 
   **Parameters:**
   
   - `sql` (string): SQL statement.
-  - `params` (any[]): Parameters for the SQL statement. Default is an empty array.
+  - `args` (any[]): Parameters for the SQL statement. Default is an empty array.
 
   **Returns:**
   
@@ -632,14 +632,14 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `where(condition: string, params: any[] = []): QueryBuilder`
+### `where(condition: string, args: any[] = []): QueryBuilder`
 
 - Specifies the WHERE clause in the query.
 
   **Parameters:**
   
   - `condition` (string): WHERE clause condition.
-  - `params` (any[]): Parameters for the WHERE condition. Default is an empty array.
+  - `args` (any[]): Parameters for the WHERE condition. Default is an empty array.
 
   **Returns:**
   
@@ -1068,14 +1068,14 @@ export default class Migration extends ItMigration {
 
 ### Static Methods
 
-#### `executeSql(sql: string, params: any[] = []): Promise<QueryResult>`
+#### `executeSql(sql: string, args: any[] = []): Promise<QueryResult>`
 
 - Executes a raw SQL query on the database.
 
   **Parameters:**
   
   - `sql` (string): SQL query string.
-  - `params` (any[]): Parameters for the SQL query. Default is an empty array.
+  - `args` (any[]): Parameters for the SQL query. Default is an empty array.
 
   **Returns:**
   

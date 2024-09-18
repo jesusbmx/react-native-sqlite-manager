@@ -42,18 +42,18 @@ export default class Model {
    */
   static executeSql(
     sql: string, 
-    params: any[] = []
+    args: any[] = []
   ): Promise<QueryResult> {
     const db = DB.get(this.databaseName);
-    return db.executeSql(sql, params);
+    return db.executeSql(sql, args);
   }
 
-  static executeSingleQuery(
+  static rawQuery(
     sql: string, 
-    params: any[] = []
+    args: any[] = []
   ): Promise<SQLite.ResultSet> {
     const db = DB.get(this.databaseName);
-    return db.executeSingleQuery(sql, params);
+    return db.rawQuery(sql, args);
   }
 
   /**
@@ -142,7 +142,7 @@ export default class Model {
     const sql = `
       SELECT * FROM ${this.tableName}
     `
-    const result = await this.executeSingleQuery(sql);
+    const result = await this.rawQuery(sql);
     const list: T[] = [];
     for (let i = 0; i < result.rows.length; i++) {
       const row = result.rows.item(i);
@@ -170,7 +170,7 @@ export default class Model {
    */
   static async query<T extends Model>(options: QueryOptions = {}): Promise<any[]> {
     const sql = QueryBuilder.buildSelect(this.tableName, options);
-    const result = await this.executeSingleQuery(sql, options.where?.args);
+    const result = await this.rawQuery(sql, options.where?.args);
     const list: T[] = [];
     for (let i = 0; i < result.rows.length; i++) {
       const row = result.rows.item(i);
