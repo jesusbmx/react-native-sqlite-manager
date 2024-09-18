@@ -395,11 +395,6 @@ export default class Migration extends ItMigration {
         table.text("description").defaultVal("") // Added in version 2
       });
     }
-
-    // Migration from version 2 to version 3
-    if (oldVersion < 3 && newVersion >= 3) {
-      // ...
-    }
   }
 }
 ```
