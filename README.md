@@ -388,12 +388,30 @@ export default class Migration extends ItMigration {
   async onUpdate(db: DB, oldVersion: number, newVersion: number) {
     const schema = new Schema(db)
 
+    await schema.alter("tb_animals", (table) => {
+      table.text("description").defaultVal("") // Added in version 2
+    });
+  }
+}
+```
+
+If you want to do the validation manually
+
+```js
+import { DB, ItMigration, Schema } from 'react-native-sqlite-manager';
+
+export default class Migration extends ItMigration {
+    
+  async onCreate(db: DB) {
+    // ..
+  }
+  
+  async onUpdate(db: DB, oldVersion: number, newVersion: number) {
+    const schema = new Schema(db)
+
     // Migration from version 1 to version 2
     if (oldVersion < 2 && newVersion >= 2) {
-      // await db.executeSql(`ALTER TABLE tb_animals ADD COLUMN description TEXT DEFAULT '';`);
-      await schema.alter("tb_animals", (table) => {
-        table.text("description").defaultVal("") // Added in version 2
-      });
+      await db.executeSql(`ALTER TABLE tb_animals ADD COLUMN description TEXT DEFAULT '';`);
     }
   }
 }
