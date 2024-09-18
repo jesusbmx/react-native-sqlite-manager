@@ -436,9 +436,7 @@ export default class Migration extends ItMigration {
    * @param {number} newVersion
    */
   async onUpdate(db: DB, oldVersion: number, newVersion: number) {
-    if (oldVersion != newVersion) {
-      await define(db)
-    }
+    await define(db)
   }
 }
 ```
