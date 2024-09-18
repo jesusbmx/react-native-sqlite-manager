@@ -346,7 +346,7 @@ db.migrate(new Migration(), /*version*/ 2).then(() => {
   setLoading(false)
 })
 ```
-In the code above, we use **DB.get("example.db")** to access the database instance, **new Migration()** to create an updated database schema, and **2** to set the new database version. The migrate function will execute the migration schema only if the database doesn't exist yet or if the version is being updated.
+In the code above, we use `DB.get("example.db")` to access the database instance, `new Migration()` to create an updated database schema, and 2 to set the new database version. The migrate function will execute the migration schema only if the database doesn't exist yet or if the version is being updated.
 
 ### Key Points:
 
@@ -356,7 +356,7 @@ In the code above, we use **DB.get("example.db")** to access the database instan
 
 ### Updated Schema
 
-The `Migration` class defines the structural changes for the new database version. For example, in version `2`, you might want to add a `description` column to the `tb_animals` table. Here's an example of how you can define that migration:
+The `Migration` class defines the structural changes for the new database version. For example, in version 2, you might want to add a `description` column to the `tb_animals` table. Here's an example of how you can define that migration:
 ```js
 import { DB, ItMigration, Schema } from 'react-native-sqlite-manager';
 
