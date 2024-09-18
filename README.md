@@ -346,16 +346,17 @@ db.migrate(new Migration(), /*version*/ 2).then(() => {
   setLoading(false)
 })
 ```
-In the code above, we use `DB.get("example.db")` to access the database instance, `new Migration()` to create an updated database schema, and 2 to set the new database version.
+In the code above, we use `DB.get("example.db")` to access the database instance, `new Migration()` to create an updated database schema, and `2` to set the new database version. The migrate function will execute the migration schema only if the database doesn't exist yet or if the version is being updated.
 
-In this example:
+### Key Points:
 
   - `DB.get("example.db")` retrieves the database instance.
-  - `new Migration()` applies the updated schema for version 2 of the database.
+  - `new Migration()` defines the updated schema for version 2 of the database.
+  - The migration process will only be triggered if the database is new or the version changes, ensuring efficient schema updates without redundant operations.
 
 ### Updated Schema
 
-The `Migration` class defines the structural changes for the new database version. For instance, you might add new columns to an existing table. Below is an example of a migration that adds a `description` column to the `tb_animals` table:
+The `Migration` class defines the structural changes for the new database version. For example, in version `2`, you might want to add a `description` column to the `tb_animals` table. Here's an example of how you can define that migration:
 ```js
 import { DB, ItMigration, Schema } from 'react-native-sqlite-manager';
 
@@ -398,7 +399,7 @@ export default class Migration extends ItMigration {
 
 ### Simplified Approach for Schema Updates
 
-To simplify adding the `description` column without manually validating the version, you can define a helper function and use it in both the `onCreate` and `onUpdate` methods. This approach uses `createOrAlter` to ensure the column is added if it doesn't already exist, regardless of the version change:
+To avoid manually checking the version, you can streamline the process using a centralized schema definition. By defining a helper function that adds the new column when needed, the schema can be consistently updated both during creation and version updates:
 
 ```js
 import { DB, ItMigration, Schema } from 'react-native-sqlite-manager';
@@ -442,9 +443,11 @@ export default class Migration extends ItMigration {
 
 ### Key Points:
 
-  - `createOrAlter`: Ensures that new columns are added even if they don't exist in the current schema.
-  - Centralized schema definition in `define`: The database structure can be updated both when the database is created and when its version is updated.
+  - `createOrAlter`: Ensures that the new columns are added even if they don't exist in the current schema.
+  - Centralized schema definition: By using the `define` function, the same schema logic is applied when creating the database or updating its version, reducing redundancy.
 
+
+# Documentation
 
 ## `DB` Class
 
