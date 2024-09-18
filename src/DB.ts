@@ -181,6 +181,7 @@ export default class DB {
 
     // Obtiene la version actual de la db
     const dbVersion: number = await this.getVersion();
+    await migration.beforeMigration(this, dbVersion, version);
 
     // Valida la version actual con la version del archivo
     if (dbVersion == 0) {
@@ -194,6 +195,7 @@ export default class DB {
 
     // Setea la nueva version en la base de datos
     await this.setVersion(version);
+    await migration.afterMigration(this, dbVersion, version);
   }
 
   /**

@@ -802,31 +802,42 @@ export default class Migration extends ItMigration {
 
 ### `create(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema>`
 
-- Creates a new table in the database.
+- Creates a new table in the database with columns, indexes, and constraints defined in the `TableSchema`. Constraints such as `PRIMARY KEY`, `FOREIGN KEY`, `UNIQUE`, and `CHECK` are applied during the table creation.
 
+  **What it does:**
+
+  - Creates a table with the defined columns and constraints.
+  - Creates the specified indexes after the table is created.
+  - Ensures that column names and constraints are correctly included in the SQL query.
+  
   **Parameters:**
   
-  - `tableName` (string): Name of the table to be created.
-  - `closure` (function): Function that defines the columns and constraints of the table.
+  - `tableName` (string): The name of the table to be created.
+  - `closure` (function): A function that defines the columns and constraints of the table.
 
   **Returns:**
   
-  - `Promise<TableSchema>`: Promise resolving to the created `TableSchema` instance.
+  - `Promise<TableSchema>`: A promise that resolves to the created `TableSchema` instance.
 
 ---
 
 ### `alter(tableName: string, closure: (table: TableSchema) => void): Promise<TableSchema>`
 
-- Alters an existing table by adding new columns that do not already exist.
+- Alters an existing table by adding new columns that do not already exist. The table structure is modified by appending these columns, but it does not modify existing columns or constraints.
+
+  **What it does:**
+
+  - Adds new columns to the table if they do not already exist.
+  - Recreates indexes if any are defined in the `TableSchema`.
 
   **Parameters:**
   
-  - `tableName` (string): Name of the table to be altered.
-  - `closure` (function): Function that defines the new columns and constraints to be added.
-
+  - `tableName` (string): The name of the table to be altered.
+  - `closure` (function): A function that defines the new columns to be added and the corresponding constraints.
+  
   **Returns:**
   
-  - `Promise<TableSchema>`: Promise resolving to the altered `TableSchema` instance.
+  - `Promise<TableSchema>`: A promise that resolves to the altered `TableSchema` instance.
 
 ---
 

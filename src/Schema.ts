@@ -109,6 +109,92 @@ export default class Schema {
       const existingColumnNames = await this.getColumnNames(table.name);
       return table.columns.filter(col => !existingColumnNames.includes(col.name));
     }
+
+    /**
+     * Crea una nueva tabla con la misma estructura que una tabla existente, incluyendo llaves foráneas, pero sin datos.
+     * @param originalTableName Nombre de la tabla existente
+     * @param newTableName Nombre de la nueva tabla
+     */
+    async duplicateTableStructure(originalTableName: string, newTableName: string): Promise<void> {
+      // Obtener las columnas de la tabla original
+      const columnInfo = await this.execSQL(`PRAGMA table_info(${originalTableName})`);
+      
+      // Generar la consulta de creación de la nueva tabla
+      const columnsDefinitions = columnInfo.rows.map(row => {
+          let columnDef = `${row.name} ${row.type}`;
+          if (row.notnull) columnDef += " NOT NULL";
+          if (row.dflt_value !== null) columnDef += ` DEFAULT ${row.dflt_value}`;
+          if (row.pk) columnDef += " PRIMARY KEY";
+          return columnDef;
+      }).join(",\n");
+
+      // Obtener las llaves foráneas de la tabla original
+      const foreignKeys = await this.execSQL(`PRAGMA foreign_key_list(${originalTableName})`);
+      
+      // Agregar las llaves foráneas a la definición de la nueva tabla
+      const foreignKeyDefinitions = foreignKeys.rows.map(row => {
+          return `FOREIGN KEY(${row.from}) REFERENCES ${row.table}(${row.to}) ON DELETE ${row.on_delete} ON UPDATE ${row.on_update}`;
+      }).join(",\n");
+
+      const createTableSQL = `
+          CREATE TABLE IF NOT EXISTS ${newTableName} (
+              ${columnsDefinitions}
+              ${foreignKeyDefinitions ? ",\n" + foreignKeyDefinitions : ""}
+          )
+      `;
+
+      // Crear la nueva tabla
+      await this.execSQL(createTableSQL);
+
+      // Obtener los índices de la tabla original
+      const indexInfo = await this.execSQL(`PRAGMA index_list(${originalTableName})`);
+      
+      // Recrear los índices en la nueva tabla
+      for (const index of indexInfo.rows) {
+          const indexDetails = await this.execSQL(`PRAGMA index_info(${index.name})`);
+          const indexColumns = indexDetails.rows.map(row => row.name).join(", ");
+          const createIndexSQL = `CREATE ${index.unique ? "UNIQUE" : ""} INDEX IF NOT EXISTS ${index.name} ON ${newTableName} (${indexColumns})`;
+          await this.execSQL(createIndexSQL);
+      }
+  }
+
+  /**
+   * Copia los datos de una tabla a otra.
+   * @param sourceTableName Nombre de la tabla de origen.
+   * @param destinationTableName Nombre de la tabla de destino.
+   */
+  async copyTableData(sourceTableName: string, destinationTableName: string): Promise<QueryResult> {
+    // Verificar si ambas tablas existen
+    const sourceTableExists = await this.hasTable(sourceTableName);
+    const destinationTableExists = await this.hasTable(destinationTableName);
+    
+    if (!sourceTableExists) {
+        throw new Error(`The source table '${sourceTableName}' does not exist.`);
+    }
+    if (!destinationTableExists) {
+        throw new Error(`The destination table '${destinationTableName}' does not exist.`);
+    }
+
+    // Obtener los nombres de las columnas de ambas tablas
+    const sourceColumns = await this.getColumnNames(sourceTableName);
+    const destinationColumns = await this.getColumnNames(destinationTableName);
+
+    // Verificar que ambas tablas tengan las mismas columnas
+    const commonColumns = sourceColumns.filter(column => destinationColumns.includes(column));
+    if (commonColumns.length === 0) {
+        throw new Error('There are no common columns between the two tables.');
+    }
+
+    // Generar la consulta SQL para copiar los datos
+    const columnList = commonColumns.join(", ");
+    const copySQL = `
+        INSERT INTO ${destinationTableName} (${columnList})
+        SELECT ${columnList} FROM ${sourceTableName}
+    `;
+
+    // Ejecutar la consulta de copia
+    return await this.execSQL(copySQL);
+  }
 }
 
 /*
