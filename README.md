@@ -230,17 +230,13 @@ const firtsAnimal = await Animal.first()
 // WHERE age > 8 AND age < 12
 // ORDER BY name ASC 
 // LIMIT 30 OFFSET 60
-const animalsByQuery = await Animal.query({
-  columns: 'id, name, color',
-  where: {
-    clause: 'age > ? AND age < ?',
-    args: [ 8, 12 ],
-  },
-  page: 3,
-  limit: 30,
-  order: 'name ASC'
-})
-
+const results = await Animal.query()
+    .select('id, name')
+    .where('age > ? AND age < ?', [2, 10])
+    .orderBy('name ASC')
+    .page(2)
+    .limit(30)
+    .get<Animal>();
 ```
 
 #### Insert
@@ -677,9 +673,13 @@ export default class Migration extends ItMigration {
 
 ---
 
-### `get(): Promise<any[]>`
+### `get<V>(cursorFactory?: (row: any) => V): Promise<V[]>`
 
 - Executes the SELECT query and returns a promise resolving to the result.
+
+  **Parameters:**
+
+  - `cursorFactory` (function): Row Constructor.
 
   **Returns:**
   
@@ -1153,7 +1153,7 @@ export default class Migration extends ItMigration {
 
 ---
 
-#### `query(options: QueryOptions = {}): Promise<any[]>`
+#### `select(options: QueryOptions = {}): Promise<any[]>`
 
 - Executes a query with specified options.
 
@@ -1164,6 +1164,16 @@ export default class Migration extends ItMigration {
   **Returns:**
   
   - `Promise<any[]>`: Promise resolving to an array of records matching the query.
+
+---
+
+#### `query(): QueryBuilder`
+
+- Create a new QueryBuilder already configured for the model table.
+
+  **Returns:**
+  
+  - `QueryBuilder`: Instance to build SQL queries using chained methods like `.where()`, `.orderBy()`, `.limit()`, etc.
 
 ---
 

@@ -26,6 +26,7 @@ class QueryBuilder {
   private _orderBy: string | undefined = undefined;
   private _limit: number | undefined = undefined;
   private _page: number | undefined = undefined;
+  private _cursorFactory?: (row: any) => any;
 
   constructor(db: DB, tableName: string) {
     this.db = db;
@@ -58,12 +59,17 @@ class QueryBuilder {
     return this;
   }
 
+  cursorFactory(factory: (row: any) => any): this {
+    this._cursorFactory = factory;
+    return this;
+  }
+
   /** 
    * SELECT
    * 
    * @returns array de registros
    */ 
-  async get(): Promise<any[]> {
+  async get<V>(cursorFactory?: (row: any) => V): Promise<V[]> {
     const sql = QueryBuilder.buildSelect(this.tableName, {
       columns: this._columns,
       where: {
@@ -75,8 +81,16 @@ class QueryBuilder {
       page: this._page,
     });
 
-    const result = await this.db.executeSql(sql, this._whereArgs);
-    return result.rows;
+    const result = await this.db.rawQuery(sql, this._whereArgs);
+    const rows: V[] = [];
+
+    for (let i = 0; i < result.rows.length; i++) {
+      const row = result.rows.item(i);
+      const factory = cursorFactory ?? this._cursorFactory;
+      rows.push(factory ? factory(row) : row);
+    }
+
+    return rows;
   }
 
   /** 

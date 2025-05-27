@@ -168,15 +168,48 @@ export default class Model {
    * @param {QueryOptions} options
    * @returns array de registros
    */
-  static async query<T extends Model>(options: QueryOptions = {}): Promise<any[]> {
-    const sql = QueryBuilder.buildSelect(this.tableName, options);
-    const result = await this.rawQuery(sql, options.where?.args);
+  static async select<T extends Model>(
+    optionsOrSql: QueryOptions | string = {},
+    args: any[] = []
+  ): Promise<T[]> {
+    let sql: string;
+    let queryArgs: any[];
+  
+    if (typeof optionsOrSql === 'string') {
+      // Caso: uso manual del query SQL
+      sql = optionsOrSql;
+      queryArgs = args;
+    } else {
+      // Caso: uso del objeto QueryOptions
+      sql = QueryBuilder.buildSelect(this.tableName, optionsOrSql);
+      queryArgs = optionsOrSql.where?.args || [];
+    }
+  
+    const result = await this.rawQuery(sql, queryArgs);
     const list: T[] = [];
+  
     for (let i = 0; i < result.rows.length; i++) {
       const row = result.rows.item(i);
       list.push(this.databaseToModel(row) as T);
     }
+  
     return list;
+  }  
+
+  /**
+   * const results = await Animal.query()
+   *  .select('id, name')
+   *  .where('age > ? AND age < ?', [2, 10])
+   *  .orderBy('name ASC')
+   *  .page(2)
+   *  .limit(30)
+   *  .get<Animal>();
+   * @returns 
+   */
+  static query(): QueryBuilder {
+    const db = DB.get(this.databaseName);
+    return db.table(this.tableName)
+      .cursorFactory(this.databaseToModel);
   }
 
   /**
