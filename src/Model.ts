@@ -211,7 +211,7 @@ export default class Model {
   static query(): QueryBuilder {
     const db = DB.get(this.databaseName);
     return db.table(this.tableName)
-      .cursorFactory(this.databaseToModel);
+      .cursorFactory((row: any) => this.databaseToModel(row));
   }
 
   /**
