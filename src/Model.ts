@@ -66,7 +66,7 @@ export default class Model {
    * @return registro
    */
   static async findBy<T extends Model>(
-    column: string, op: string, value: string
+    column: string, op: string, value: any
   ): Promise<T | undefined> {
     
     const sql = `
@@ -154,7 +154,7 @@ export default class Model {
 
   /**
    * ```js
-   * Animal.query({
+   * Animal.select({
    *   columns: 'id, name',
    *   where: {
    *     clause: 'age > ? AND age < ?',
@@ -197,13 +197,15 @@ export default class Model {
   }  
 
   /**
+   * ```js
    * const results = await Animal.query()
-   *  .select('id, name')
-   *  .where('age > ? AND age < ?', [2, 10])
-   *  .orderBy('name ASC')
-   *  .page(2)
-   *  .limit(30)
-   *  .get<Animal>();
+   *    .select('id, name')
+   *    .where('age > ? AND age < ?', [2, 10])
+   *    .orderBy('name ASC')
+   *    .page(2)
+   *    .limit(30)
+   *    .get<Animal>();
+   * ```
    * @returns 
    */
   static query(): QueryBuilder {

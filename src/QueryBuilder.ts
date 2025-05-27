@@ -84,10 +84,11 @@ class QueryBuilder {
     const result = await this.db.rawQuery(sql, this._whereArgs);
     const rows: V[] = [];
 
+    const factory: (row: any) => V =
+        cursorFactory ?? this._cursorFactory ?? ((row: any) => row);
+
     for (let i = 0; i < result.rows.length; i++) {
-      const row = result.rows.item(i);
-      const factory = cursorFactory ?? this._cursorFactory;
-      rows.push(factory ? factory(row) : row);
+      rows.push(factory(result.rows.item(i)));
     }
 
     return rows;
